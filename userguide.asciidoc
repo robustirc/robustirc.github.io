@@ -1,0 +1,104 @@
+= RobustIRC User Guide =
+:numbered:
+:toc: right
+
+== Motivation ==
+
+== High-level Overview ==
+
+[[failure_modes]]
+=== Failure Modes ===
+
+This chapter describes how RobustIRC behaves when faced with various failure
+scenarios. We assume that each RobustIRC node is running on a different
+machine, ideally on a different physical machine, as otherwise a failure of the
+host machine will lead to not only a single-node failure, but a multiple-node
+failure.
+
+The number of nodes necessary to establish quorum depends on the number of
+nodes in the network. As an example, in a 3-node network, you need floor(n/2)+1
+= 2 nodes to reach quorum. In a 5-node network, you need floor(n/2)+1 = 3 nodes
+to reach quorum.
+
+==== Node Failures ====
+
+Node failures means the node does not reply to heartbeats anymore. This could
+happen for example because the server process gets killed, because the machine
+is powered off, because the machine drops off the network, or many other
+reasons.
+
+In case the node was a *follower*, clients which were receiving messages from
+that node (GetMessages request) need to connect to a different node before they
+can receive any new messages. How long the clients need to realize that the
+node has failed depends on the exact failure mode. In the worst case, clients
+will timeout a connection after not receiving any data for 1 minute.
+
+In case the node was the *leader*, the previous paragraph also applies.
+Additionally, clients will not be able to send new messages until a new leader
+is elected. Depending on the network configuration, this typically takes
+between 5 and 10 seconds, provided that there are enough nodes that a quorum
+can be established. If there are not, the network will remain frozen/read-only
+until enough nodes are available.
+
+==== Network Partition ====
+
+TODO(secure): describe a network partition
+
+== Network Performance ==
+
+=== Latency ===
+
+TODO(secure): add latency measurements and explanation
+
+== Clients ==
+
+=== Bridge ===
+
+The RobustIRC bridge is a program which bridges between the RobustIRC protocol and standard IRC footnote:[As defined per RFC2812.].
+
+Depending on where the bridge runs, you get two benefits:
+
+1. You can connect to a RobustIRC network with your IRC client of choice.
+   Typically, RobustIRC networks will provide a bridge. The recommended
+   hostname is `legacy-irc.<networkname>`, e.g. `legacy-irc.robustirc.net`.
+
+2. If the connection between the bridge and your IRC client is stable,
+   single-server unavailability and network partitions will be handled
+   transparently by the bridge. See <<failure_modes>> for details on the
+   failure modes. To get a stable connection to your bridge, you typically need
+   to run the bridge on the same machine as your IRC client.
+
+==== SOCKS5 ====
+
+When running a bridge on the same machine as your IRC client, you’d run it
+using `robustirc-bridge -socks=localhost:1080` and then configure
+`localhost:1080` as the SOCKS5 proxy address to use for connecting to a network
+in your IRC client.
+
+.WeeChat
+--------------------------------------------------------------------------------
+TODO: describe how to set up weechat with SOCKS5 proxy
+--------------------------------------------------------------------------------
+
+==== IRC proxy ====
+
+In case your IRC client does either not support SOCKS5 at all or does not
+support per-network proxy configuration (e.g. irssi), you can use the bridge in
+IRC proxy mode. The downside is that you need to run one bridge instance per
+RobustIRC network you want to connect to.
+
+After starting the bridge with `robustirc-bridge -socks= -irc=localhost:6667
+-network=<network>`, you can configure `localhost:6667` as IRC server in your
+client.
+
+.Starting the bridge in IRC proxy mode
+--------------------------------------------------------------------------------
+robustirc-bridge -socks -irc=localhost:6667 -network=robustirc.net
+--------------------------------------------------------------------------------
+
+.irssi: Connecting to the configured network
+--------------------------------------------------------------------------------
+/network add robustirc
+/server add -auto -network robustirc localhost 6667
+/connect robustirc
+--------------------------------------------------------------------------------
