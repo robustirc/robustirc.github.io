@@ -87,13 +87,12 @@ support per-network proxy configuration (e.g. irssi), you can use the bridge in
 IRC proxy mode. The downside is that you need to run one bridge instance per
 RobustIRC network you want to connect to.
 
-After starting the bridge with `robustirc-bridge -socks= -irc=localhost:6667
--network=<network>`, you can configure `localhost:6667` as IRC server in your
-client.
+After starting the bridge with `robustirc-bridge -network=<network>`, you can
+configure `localhost:6667` as IRC server in your client.
 
 .Starting the bridge in IRC proxy mode
 --------------------------------------------------------------------------------
-robustirc-bridge -socks -irc=localhost:6667 -network=robustirc.net
+robustirc-bridge -network=robustirc.net
 --------------------------------------------------------------------------------
 
 .irssi: Connecting to the configured network
