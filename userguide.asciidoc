@@ -22,7 +22,7 @@ to reach quorum.
 
 ==== Node Failures ====
 
-Node failures means the node does not reply to heartbeats anymore. This could
+Node failure means the node does not reply to heartbeats anymore. This could
 happen for example because the server process gets killed, because the machine
 is powered off, because the machine drops off the network, or many other
 reasons.
@@ -30,7 +30,7 @@ reasons.
 In case the node was a *follower*, clients which were receiving messages from
 that node (GetMessages request) need to connect to a different node before they
 can receive any new messages. How long the clients need to realize that the
-node has failed depends on the exact failure mode. In the worst case, clients
+node has failed depends on the specific failure mode. In the worst case, clients
 will timeout a connection after not receiving any data for 1 minute.
 
 In case the node was the *leader*, the previous paragraph also applies.
@@ -42,7 +42,24 @@ until enough nodes are available.
 
 ==== Network Partition ====
 
-TODO(secure): describe a network partition
+Network partition means that some link becomes unavailable, for example because
+a physical cable is removed, and the network is partitioned into multiple
+parts.
+
+In case the link between the client and any given server within the network
+becomes unavailable, the client will just switch to a different server
+transparently. Direct contact to the current leader is not required, since
+followers will proxy requests for the client when necessary.
+
+In case the link between servers becomes unavailable, the previous section
+(„Node Failures“) applies for the server which now became unavailable. In case
+the RobustIRC network is structured in such a way that a single link
+unavailability affects multiple servers, the problem may be more severe: if the
+servers within each network partition cannot reach quorum, the network is
+frozen. As an example, in a network with 2 nodes each in 2 datacenters, the
+network must freeze when the connection between data centers becomes
+unavailable. However, if you had 5 nodes, you would need at least two such link
+failures at the same time to be unable to reach quorum.
 
 == Network Performance ==
 

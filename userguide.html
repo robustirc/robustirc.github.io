@@ -462,7 +462,7 @@ to reach quorum.</p>
 <div class="sect3">
 <h4 id="_node_failures">2.1.1. Node Failures</h4>
 <div class="paragraph">
-<p>Node failures means the node does not reply to heartbeats anymore. This could
+<p>Node failure means the node does not reply to heartbeats anymore. This could
 happen for example because the server process gets killed, because the machine
 is powered off, because the machine drops off the network, or many other
 reasons.</p>
@@ -471,7 +471,7 @@ reasons.</p>
 <p>In case the node was a <strong>follower</strong>, clients which were receiving messages from
 that node (GetMessages request) need to connect to a different node before they
 can receive any new messages. How long the clients need to realize that the
-node has failed depends on the exact failure mode. In the worst case, clients
+node has failed depends on the specific failure mode. In the worst case, clients
 will timeout a connection after not receiving any data for 1 minute.</p>
 </div>
 <div class="paragraph">
@@ -486,7 +486,26 @@ until enough nodes are available.</p>
 <div class="sect3">
 <h4 id="_network_partition">2.1.2. Network Partition</h4>
 <div class="paragraph">
-<p>TODO(secure): describe a network partition</p>
+<p>Network partition means that some link becomes unavailable, for example because
+a physical cable is removed, and the network is partitioned into multiple
+parts.</p>
+</div>
+<div class="paragraph">
+<p>In case the link between the client and any given server within the network
+becomes unavailable, the client will just switch to a different server
+transparently. Direct contact to the current leader is not required, since
+followers will proxy requests for the client when necessary.</p>
+</div>
+<div class="paragraph">
+<p>In case the link between servers becomes unavailable, the previous section
+(„Node Failures“) applies for the server which now became unavailable. In case
+the RobustIRC network is structured in such a way that a single link
+unavailability affects multiple servers, the problem may be more severe: if the
+servers within each network partition cannot reach quorum, the network is
+frozen. As an example, in a network with 2 nodes each in 2 datacenters, the
+network must freeze when the connection between data centers becomes
+unavailable. However, if you had 5 nodes, you would need at least two such link
+failures at the same time to be unable to reach quorum.</p>
 </div>
 </div>
 </div>
@@ -554,14 +573,13 @@ IRC proxy mode. The downside is that you need to run one bridge instance per
 RobustIRC network you want to connect to.</p>
 </div>
 <div class="paragraph">
-<p>After starting the bridge with <code>robustirc-bridge -socks= -irc=localhost:6667
--network=&lt;network&gt;</code>, you can configure <code>localhost:6667</code> as IRC server in your
-client.</p>
+<p>After starting the bridge with <code>robustirc-bridge -network=&lt;network&gt;</code>, you can
+configure <code>localhost:6667</code> as IRC server in your client.</p>
 </div>
 <div class="listingblock">
 <div class="title">Starting the bridge in IRC proxy mode</div>
 <div class="content">
-<pre>robustirc-bridge -socks -irc=localhost:6667 -network=robustirc.net</pre>
+<pre>robustirc-bridge -network=robustirc.net</pre>
 </div>
 </div>
 <div class="listingblock">
@@ -585,7 +603,7 @@ client.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-01-07 10:07:15 CET
+Last updated 2015-01-11 19:07:18 CET
 </div>
 </div>
 </body>
