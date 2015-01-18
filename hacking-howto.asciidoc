@@ -1,0 +1,41 @@
+= RobustIRC Hacking Howto =
+:numbered:
+:toc: right
+
+== What do IRC servers do? ==
+
+IRC is a text-based protocol to primarily exchange messages, either between one
+user and another (called query) or one user and many others (messages going
+into an IRC channel).
+
+In order to do that in an orderly fashion, IRC keeps state for users and
+channels. For users, the state is most importantly the unique nickname, but
+also modes (e.g. is the user invisible or should the user be listed in /who?),
+an away message, etc. For channels, the most visible state is the channel
+topic, and which users are in a channel.
+
+So, the IRC server is responsible for modifying state on behalf of a user, and
+for sending messages/state changes out to other users.
+
+== The RobustIRC processing model ==
+
+Since RobustIRC uses Raft, the processing model is rather strict: each incoming
+IRC message possibly modifies state and generates 0 to n outgoing IRC messages.
+
+The `FSM.Apply()` function is called every time Raft committed a new entry into
+the log. Raft-internal messages like a change in the peers are ignored, but
+everything else is treated as an IRC input message and gets sent to
+`ircserver.ProcessMessage`.
+
+`ircserver.ProcessMessage` looks at the IRC message, possibly
+modifies state, and returns a number of resulting messages. As an example, for
+the incoming message `NICK destroyer`, the function would modify the
+corresponding session’s `Nickname` attribute to be `destroyer`, then return the
+output IRC message `:oldnick!robust@robust/0x12345 NICK destroyer`. 
+
+The result of `ircserver.ProcessMessage` is then passed to
+`ircserver.SendMessages`, which adds the message to an append-only array. Every
+RobustIRC user is waiting for changes of that array in the GetMessages request,
+which is a never-ending HTTP request that sends out new array entries as HTTP
+chunks. Because not every message needs to be sent to every RobustIRC user,
+they are filtered in `ircserver.Session.InterestedIn`.
