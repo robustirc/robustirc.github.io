@@ -118,3 +118,58 @@ robustirc-bridge -network=robustirc.net
 /server add -auto -network robustirc localhost 6667
 /connect robustirc
 --------------------------------------------------------------------------------
+
+== Server Configuration ==
+
+=== Docker ===
+
+You can use the official
+https://registry.hub.docker.com/u/robustirc/robustirc/[docker container
+“robustirc/robustirc”] that we provide.
+
+We run one of our servers on CoreOS, which provides quite a restricted
+environment, so we describe that setup in the hope that you can easily adapt
+it.
+
+In the example systemd service file below, `/media/persistent` is the path on
+which we have mounted our persistent storage. We use it to load the TLS
+key/certificate from and store the RobustIRC state.
+
+Furthermore, the node runs on the public port `60667`, which reminds of the
+conventional `6667` IRC port, but is in the dynamic range. Via `-peer_addr`,
+the node’s public address is provided to RobustIRC. This is necessary as docker
+uses a private network within the container.
+
+The first read-only mounted volumes are necessary so that RobustIRC can use the
+system CA certificates. The path(s) you need to mount are different depending
+on your operating system. See
+http://golang.org/src/crypto/x509/root_unix.go#L11 for the paths which Go
+checks. Some operating systems use symlinks in these locations, so make sure
+you mount all the necessary volumes.
+
+.systemd service file for starting RobustIRC in Docker
+--------------------------------------------------------------------------------
+[Unit]
+Description=RobustIRC
+After=docker.service
+Requires=docker.service
+
+[Service]
+# Always pull the latest version (bleeding edge).
+ExecStartPre=/usr/bin/docker pull robustirc/robustirc:latest
+ExecStart=/usr/bin/docker run \
+  -v /etc/ssl:/etc/ssl:ro \
+  -v /usr/share/ca-certificates:/usr/share/ca-certificates:ro \
+  -v /media/persistent:/media/persistent:ro \
+  -v /media/persistent/robustirc:/var/lib/robustirc \
+  -p :60667:443 \
+  robustirc/robustirc:latest \
+    -tls_cert_path=/media/persistent/ssl/combined.crt \
+    -tls_key_path=/media/persistent/ssl/robustirc.net.startssl.key \
+    -network_password=<secret> \
+    -network_name=robustirc.net \
+    -peer_addr=dock0.robustirc.net:60667
+
+[Install]
+WantedBy=multi-user.target
+--------------------------------------------------------------------------------

@@ -431,6 +431,11 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_bridge">4.1. Bridge</a></li>
 </ul>
 </li>
+<li><a href="#_server_configuration">5. Server Configuration</a>
+<ul class="sectlevel2">
+<li><a href="#_docker">5.1. Docker</a></li>
+</ul>
+</li>
 </ul>
 </div>
 </div>
@@ -594,6 +599,71 @@ configure <code>localhost:6667</code> as IRC server in your client.</p>
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_server_configuration">5. Server Configuration</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_docker">5.1. Docker</h3>
+<div class="paragraph">
+<p>You can use the official
+<a href="https://registry.hub.docker.com/u/robustirc/robustirc/">docker container
+“robustirc/robustirc”</a> that we provide.</p>
+</div>
+<div class="paragraph">
+<p>We run one of our servers on CoreOS, which provides quite a restricted
+environment, so we describe that setup in the hope that you can easily adapt
+it.</p>
+</div>
+<div class="paragraph">
+<p>In the example systemd service file below, <code>/media/persistent</code> is the path on
+which we have mounted our persistent storage. We use it to load the TLS
+key/certificate from and store the RobustIRC state.</p>
+</div>
+<div class="paragraph">
+<p>Furthermore, the node runs on the public port <code>60667</code>, which reminds of the
+conventional <code>6667</code> IRC port, but is in the dynamic range. Via <code>-peer_addr</code>,
+the node’s public address is provided to RobustIRC. This is necessary as docker
+uses a private network within the container.</p>
+</div>
+<div class="paragraph">
+<p>The first read-only mounted volumes are necessary so that RobustIRC can use the
+system CA certificates. The path(s) you need to mount are different depending
+on your operating system. See
+<a href="http://golang.org/src/crypto/x509/root_unix.go#L11" class="bare">http://golang.org/src/crypto/x509/root_unix.go#L11</a> for the paths which Go
+checks. Some operating systems use symlinks in these locations, so make sure
+you mount all the necessary volumes.</p>
+</div>
+<div class="listingblock">
+<div class="title">systemd service file for starting RobustIRC in Docker</div>
+<div class="content">
+<pre>[Unit]
+Description=RobustIRC
+After=docker.service
+Requires=docker.service
+
+[Service]
+# Always pull the latest version (bleeding edge).
+ExecStartPre=/usr/bin/docker pull robustirc/robustirc:latest
+ExecStart=/usr/bin/docker run \
+  -v /etc/ssl:/etc/ssl:ro \
+  -v /usr/share/ca-certificates:/usr/share/ca-certificates:ro \
+  -v /media/persistent:/media/persistent:ro \
+  -v /media/persistent/robustirc:/var/lib/robustirc \
+  -p :60667:443 \
+  robustirc/robustirc:latest \
+    -tls_cert_path=/media/persistent/ssl/combined.crt \
+    -tls_key_path=/media/persistent/ssl/robustirc.net.startssl.key \
+    -network_password=&lt;secret&gt; \
+    -network_name=robustirc.net \
+    -peer_addr=dock0.robustirc.net:60667
+
+[Install]
+WantedBy=multi-user.target</pre>
+</div>
+</div>
+</div>
+</div>
+</div>
 </div>
 <div id="footnotes">
 <hr>
@@ -603,7 +673,7 @@ configure <code>localhost:6667</code> as IRC server in your client.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-01-11 19:07:18 CET
+Last updated 2015-01-18 19:20:00 CET
 </div>
 </div>
 </body>
