@@ -158,7 +158,7 @@ ExecStartPre=/usr/bin/docker pull robustirc/robustirc:latest
 ExecStart=/usr/bin/docker run \
   -v /media/persistent:/media/persistent:ro \
   -v /media/persistent/robustirc:/var/lib/robustirc \
-  -p :60667:443 \
+  -p :60667:8443 \
   robustirc/robustirc:latest \
     -tls_cert_path=/media/persistent/ssl/combined.crt \
     -tls_key_path=/media/persistent/ssl/robustirc.net.startssl.key \
