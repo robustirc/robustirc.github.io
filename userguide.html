@@ -625,14 +625,6 @@ conventional <code>6667</code> IRC port, but is in the dynamic range. Via <code>
 the node’s public address is provided to RobustIRC. This is necessary as docker
 uses a private network within the container.</p>
 </div>
-<div class="paragraph">
-<p>The first read-only mounted volumes are necessary so that RobustIRC can use the
-system CA certificates. The path(s) you need to mount are different depending
-on your operating system. See
-<a href="http://golang.org/src/crypto/x509/root_unix.go#L11" class="bare">http://golang.org/src/crypto/x509/root_unix.go#L11</a> for the paths which Go
-checks. Some operating systems use symlinks in these locations, so make sure
-you mount all the necessary volumes.</p>
-</div>
 <div class="listingblock">
 <div class="title">systemd service file for starting RobustIRC in Docker</div>
 <div class="content">
@@ -645,8 +637,6 @@ Requires=docker.service
 # Always pull the latest version (bleeding edge).
 ExecStartPre=/usr/bin/docker pull robustirc/robustirc:latest
 ExecStart=/usr/bin/docker run \
-  -v /etc/ssl:/etc/ssl:ro \
-  -v /usr/share/ca-certificates:/usr/share/ca-certificates:ro \
   -v /media/persistent:/media/persistent:ro \
   -v /media/persistent/robustirc:/var/lib/robustirc \
   -p :60667:443 \
@@ -673,7 +663,7 @@ WantedBy=multi-user.target</pre>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-01-18 19:20:00 CET
+Last updated 2015-01-18 20:03:41 CET
 </div>
 </div>
 </body>
