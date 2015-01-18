@@ -148,8 +148,13 @@ After=docker.service
 Requires=docker.service
 
 [Service]
+# So that the robustirc-updater can trigger /quit to restart the node.
+Restart=always
+StartLimitInterval=0
+
 # Always pull the latest version (bleeding edge).
 ExecStartPre=/usr/bin/docker pull robustirc/robustirc:latest
+
 ExecStart=/usr/bin/docker run \
   -v /media/persistent:/media/persistent:ro \
   -v /media/persistent/robustirc:/var/lib/robustirc \

@@ -634,8 +634,13 @@ After=docker.service
 Requires=docker.service
 
 [Service]
+# So that the robustirc-updater can trigger /quit to restart the node.
+Restart=always
+StartLimitInterval=0
+
 # Always pull the latest version (bleeding edge).
 ExecStartPre=/usr/bin/docker pull robustirc/robustirc:latest
+
 ExecStart=/usr/bin/docker run \
   -v /media/persistent:/media/persistent:ro \
   -v /media/persistent/robustirc:/var/lib/robustirc \
@@ -663,7 +668,7 @@ WantedBy=multi-user.target</pre>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-01-18 20:03:41 CET
+Last updated 2015-01-18 20:07:14 CET
 </div>
 </div>
 </body>
