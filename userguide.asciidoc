@@ -92,9 +92,16 @@ using `robustirc-bridge -socks=localhost:1080` and then configure
 `localhost:1080` as the SOCKS5 proxy address to use for connecting to a network
 in your IRC client.
 
-.WeeChat
+.WeeChat: configuring the RobustIRC bridge as a SOCKS proxy
 --------------------------------------------------------------------------------
-TODO: describe how to set up weechat with SOCKS5 proxy
+/proxy add bridge socks5 localhost 1080
+--------------------------------------------------------------------------------
+
+.WeeChat: connecting to robustirc.net using the SOCKS proxy
+--------------------------------------------------------------------------------
+/server add robustirc robustirc.net
+/set irc.server.robustirc.proxy bridge
+/connect robustirc
 --------------------------------------------------------------------------------
 
 ==== IRC proxy ====

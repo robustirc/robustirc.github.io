@@ -563,9 +563,17 @@ using <code>robustirc-bridge -socks=localhost:1080</code> and then configure
 in your IRC client.</p>
 </div>
 <div class="listingblock">
-<div class="title">WeeChat</div>
+<div class="title">WeeChat: configuring the RobustIRC bridge as a SOCKS proxy</div>
 <div class="content">
-<pre>TODO: describe how to set up weechat with SOCKS5 proxy</pre>
+<pre>/proxy add bridge socks5 localhost 1080</pre>
+</div>
+</div>
+<div class="listingblock">
+<div class="title">WeeChat: connecting to robustirc.net using the SOCKS proxy</div>
+<div class="content">
+<pre>/server add robustirc robustirc.net
+/set irc.server.robustirc.proxy bridge
+/connect robustirc</pre>
 </div>
 </div>
 </div>
@@ -668,7 +676,7 @@ WantedBy=multi-user.target</pre>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-01-18 20:37:06 CET
+Last updated 2015-01-22 09:52:51 CET
 </div>
 </div>
 </body>
