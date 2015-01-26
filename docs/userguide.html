@@ -408,6 +408,21 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 .hide-for-print{display:none!important}
 .show-for-print{display:inherit!important}}
 </style>
+<script type="text/x-mathjax-config">
+MathJax.Hub.Config({
+  tex2jax: {
+    inlineMath: [["\\(", "\\)"]],
+    displayMath: [["\\[", "\\]"]],
+    ignoreClass: "nostem|nolatexmath"
+  },
+  asciimath2jax: {
+    delimiters: [["\\$", "\\$"]],
+    ignoreClass: "nostem|noasciimath"
+  },
+  TeX: { equationNumbers: { autoNumber: "none" } }
+});
+</script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.4.0/MathJax.js?config=TeX-MML-AM_HTMLorMML"></script>
 </head>
 <body class="article toc2 toc-right">
 <div id="header">
@@ -423,7 +438,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </li>
 <li><a href="#_network_performance">3. Network Performance</a>
 <ul class="sectlevel2">
-<li><a href="#_latency">3.1. Latency</a></li>
+<li><a href="#_ballpark_numbers">3.1. Ballpark numbers</a></li>
+<li><a href="#_latency">3.2. Latency</a></li>
 </ul>
 </li>
 <li><a href="#_clients">4. Clients</a>
@@ -431,9 +447,18 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_bridge">4.1. Bridge</a></li>
 </ul>
 </li>
-<li><a href="#_server_configuration">5. Server Configuration</a>
+<li><a href="#_server_deployment">5. Server Deployment</a>
 <ul class="sectlevel2">
-<li><a href="#_docker">5.1. Docker</a></li>
+<li><a href="#_number_and_location">5.1. Number and Location</a></li>
+<li><a href="#_docker">5.2. Docker</a></li>
+</ul>
+</li>
+<li><a href="#_raft_configuration">6. Raft Configuration</a>
+<ul class="sectlevel2">
+<li><a href="#_timeouts">6.1. Timeouts</a></li>
+<li><a href="#_maxappendentries">6.2. MaxAppendEntries</a></li>
+<li><a href="#_snapshotthreshold">6.3. SnapshotThreshold</a></li>
+<li><a href="#_trailinglogs">6.4. TrailingLogs</a></li>
 </ul>
 </li>
 </ul>
@@ -519,8 +544,63 @@ failures at the same time to be unable to reach quorum.</p>
 <div class="sect1">
 <h2 id="_network_performance">3. Network Performance</h2>
 <div class="sectionbody">
+<div class="paragraph">
+<p>When talking about RobustIRC performance, these are the dimensions of interest:</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">messages/s</dt>
+<dd>
+<p>This means messages per second for the entire IRC network, where
+message is an IRC protocol message, i.e. including nickname changes (not just
+<code>PRIVMSG</code>).</p>
+</dd>
+<dt class="hdlist1">sessions</dt>
+<dd>
+<p>The number of sessions. Each user who uses the bridge to connect to
+your RobustIRC network is one session. In traditional IRC networks, one session
+would be one TCP connection.</p>
+</dd>
+<dt class="hdlist1">channels</dt>
+<dd>
+<p>The number of channels is unlikely to be a scalability problem.
+However, the number of sessions participating in a channel, plus the messages/s
+within that channel, are an interesting dimension. Each message to a channel
+needs to be handed out to every participant in that channel. Therefore,
+performance goes down the more messages go into a channel, and it goes down
+faster the more sessions participate in each channel.</p>
+</dd>
+</dl>
+</div>
 <div class="sect2">
-<h3 id="_latency">3.1. Latency</h3>
+<h3 id="_ballpark_numbers">3.1. Ballpark numbers</h3>
+<div class="paragraph">
+<p>If the IRC network you’re running is small, chances are you don’t have a good
+idea of how many messages/second your network is handling. There are a couple
+of ways to get estimates:</p>
+</div>
+<div class="paragraph">
+<p><a href="http://search.mibbit.com/networks">mibbit</a> has a list of networks, and you can
+also see their non-secret channels. Looking at the channels of the biggest
+networks, there are typically about 300 users in each channel. Of course, there
+are outlier channels with 3000+ users, which typically host warez or offer some
+other kind of automated content.</p>
+</div>
+<div class="paragraph">
+<p><a href="https://freenode.net/hosting_ircd.shtml">freenode</a> cites 320 GiB/month as an
+estimate for the traffic required to run a server in the freenode network. If
+you assume an average message size of 100 bytes (the maximum being 512 bytes),
+this translates to roughly \(\frac{320 * 1024^3}{30 * 24 * 60 * 60} / 100 =
+1325\) messages/s.</p>
+</div>
+<div class="paragraph">
+<p><a href="http://irc.netsplit.de/networks/top100.php">netsplit.de</a> has a list of the
+biggest networks (excluding some that don’t want to be counted, like freenode).
+The number of users for the top 10 range from 10,000 to 50,000 users.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_latency">3.2. Latency</h3>
 <div class="paragraph">
 <p>TODO(secure): add latency measurements and explanation</p>
 </div>
@@ -608,10 +688,16 @@ configure <code>localhost:6667</code> as IRC server in your client.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_server_configuration">5. Server Configuration</h2>
+<h2 id="_server_deployment">5. Server Deployment</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_docker">5.1. Docker</h3>
+<h3 id="_number_and_location">5.1. Number and Location</h3>
+<div class="paragraph">
+<p>TODO(secure): explain network sizes and trade-offs, explain how location of servers influences reliability</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_docker">5.2. Docker</h3>
 <div class="paragraph">
 <p>You can use the official
 <a href="https://registry.hub.docker.com/u/robustirc/robustirc/">docker container
@@ -667,6 +753,90 @@ WantedBy=multi-user.target</pre>
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_raft_configuration">6. Raft Configuration</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_timeouts">6.1. Timeouts</h3>
+<div class="paragraph">
+<p>Timeouts must fulfill this relation:</p>
+</div>
+<div class="paragraph">
+<p>5ms &lt; LeaderLeaseTimeout &#8656; HeartbeatTimeout &#8656; ElectionTimeout</p>
+</div>
+<div class="paragraph">
+<p>default: 500ms (LeaderLeaseTimeout) &#8656; 1000ms (HeartbeatTimeout) &#8656; 1000ms (ElectionTimeout)</p>
+</div>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">LeaderLeaseTimeout</dt>
+<dd>
+<p>a leader steps down (i.e. does not consider itself the
+leader anymore) after it was unable to contact a quorum of nodes for
+LeaderLeaseTimeout.</p>
+</dd>
+<dt class="hdlist1">HeartbeatTimeout</dt>
+<dd>
+<p>followers enter the candidiate state once they have not
+heard from a leader within HeartbeatTimeout. The leader delays for a random
+value within [HeartbeatTimeout/10, HeartbeatTimeout/10 * 2] between each ping
+to its followers. Therefore, at least 5 (but possibly up to 10) heartbeats must
+be missed before HeartbeatTimeout is reached.</p>
+</dd>
+<dt class="hdlist1">ElectionTimeout</dt>
+<dd>
+<p>candidates restart the voting process after ElectionTimeout.</p>
+</dd>
+<dt class="hdlist1">CommitTimeout</dt>
+<dd>
+<p>See <a href="https://github.com/hashicorp/raft/issues/28">hashicorp/raft
+issue #28</a> for details. TODO(secure): run some experiments to see what happens
+when this is very low/very high. it’s 50ms by default</p>
+</dd>
+</dl>
+</div>
+<div class="paragraph">
+<p>As a rule of thumb, figure out the latency of the slowest network link between
+your nodes, e.g. by using <code>ping(8)</code>. Then, set <code>HeartbeatTimeout</code> to 10 times
+that latency so that brief network latency spikes are not a problem. Set all
+the other timeouts to the same value.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_maxappendentries">6.2. MaxAppendEntries</h3>
+<div class="paragraph">
+<p>TODO(secure): run some experiments to see if we should recommend tuning this value</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_snapshotthreshold">6.3. SnapshotThreshold</h3>
+<div class="paragraph">
+<p>TODO(secure): document</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_trailinglogs">6.4. TrailingLogs</h3>
+<div class="paragraph">
+<p>TrailingLogs is the number of raft log entries which are kept after taking a
+snapshot. If you have enough log entries to cover a brief node failure (e.g. a
+flaky network), raft does not need to send an entire snapshot over the network,
+so recovery of the failed node may be quicker.</p>
+</div>
+<div class="paragraph">
+<p>In case you configure this parameter too low, recovery after a node failure may
+consume more bandwidth and may take longer.</p>
+</div>
+<div class="paragraph">
+<p>In case you configure this parameter too high, the disk usage of RobustIRC will
+be higher, as log compactions will occur less frequently.</p>
+</div>
+<div class="paragraph">
+<p>As a rule of thumb: look at your network’s messages/second, multiply that by
+the time of a typical outage, e.g. 5 minutes.</p>
+</div>
+</div>
+</div>
+</div>
 </div>
 <div id="footnotes">
 <hr>
@@ -676,7 +846,7 @@ WantedBy=multi-user.target</pre>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-01-22 09:52:51 CET
+Last updated 2015-01-26 10:03:59 CET
 </div>
 </div>
 </body>

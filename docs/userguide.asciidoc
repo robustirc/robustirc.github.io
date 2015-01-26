@@ -1,6 +1,7 @@
 = RobustIRC User Guide =
 :numbered:
 :toc: right
+:stem: latexmath
 
 == Motivation ==
 
@@ -62,6 +63,45 @@ unavailable. However, if you had 5 nodes, you would need at least two such link
 failures at the same time to be unable to reach quorum.
 
 == Network Performance ==
+
+When talking about RobustIRC performance, these are the dimensions of interest:
+
+messages/s:: This means messages per second for the entire IRC network, where
+message is an IRC protocol message, i.e. including nickname changes (not just
+`PRIVMSG`).
+
+sessions:: The number of sessions. Each user who uses the bridge to connect to
+your RobustIRC network is one session. In traditional IRC networks, one session
+would be one TCP connection.
+
+channels:: The number of channels is unlikely to be a scalability problem.
+However, the number of sessions participating in a channel, plus the messages/s
+within that channel, are an interesting dimension. Each message to a channel
+needs to be handed out to every participant in that channel. Therefore,
+performance goes down the more messages go into a channel, and it goes down
+faster the more sessions participate in each channel.
+
+=== Ballpark numbers ===
+
+If the IRC network you’re running is small, chances are you don’t have a good
+idea of how many messages/second your network is handling. There are a couple
+of ways to get estimates:
+
+http://search.mibbit.com/networks[mibbit] has a list of networks, and you can
+also see their non-secret channels. Looking at the channels of the biggest
+networks, there are typically about 300 users in each channel. Of course, there
+are outlier channels with 3000+ users, which typically host warez or offer some
+other kind of automated content.
+
+https://freenode.net/hosting_ircd.shtml[freenode] cites 320 GiB/month as an
+estimate for the traffic required to run a server in the freenode network. If
+you assume an average message size of 100 bytes (the maximum being 512 bytes),
+this translates to roughly stem:[\frac{320 * 1024^3}{30 * 24 * 60 * 60} / 100 =
+1325] messages/s.
+
+http://irc.netsplit.de/networks/top100.php[netsplit.de] has a list of the
+biggest networks (excluding some that don’t want to be counted, like freenode).
+The number of users for the top 10 range from 10,000 to 50,000 users.
 
 === Latency ===
 
@@ -126,7 +166,11 @@ robustirc-bridge -network=robustirc.net
 /connect robustirc
 --------------------------------------------------------------------------------
 
-== Server Configuration ==
+== Server Deployment ==
+
+=== Number and Location ===
+
+TODO(secure): explain network sizes and trade-offs, explain how location of servers influences reliability
 
 === Docker ===
 
@@ -176,3 +220,58 @@ ExecStart=/usr/bin/docker run \
 [Install]
 WantedBy=multi-user.target
 --------------------------------------------------------------------------------
+
+== Raft Configuration ==
+
+=== Timeouts ===
+
+Timeouts must fulfill this relation:
+
+5ms < LeaderLeaseTimeout <= HeartbeatTimeout <= ElectionTimeout
+
+default: 500ms (LeaderLeaseTimeout) <= 1000ms (HeartbeatTimeout) <= 1000ms (ElectionTimeout)
+
+LeaderLeaseTimeout:: a leader steps down (i.e. does not consider itself the
+leader anymore) after it was unable to contact a quorum of nodes for
+LeaderLeaseTimeout.
+
+HeartbeatTimeout:: followers enter the candidiate state once they have not
+heard from a leader within HeartbeatTimeout. The leader delays for a random
+value within [HeartbeatTimeout/10, HeartbeatTimeout/10 * 2] between each ping
+to its followers. Therefore, at least 5 (but possibly up to 10) heartbeats must
+be missed before HeartbeatTimeout is reached.
+
+ElectionTimeout:: candidates restart the voting process after ElectionTimeout.
+
+CommitTimeout:: See https://github.com/hashicorp/raft/issues/28[hashicorp/raft
+issue #28] for details. TODO(secure): run some experiments to see what happens
+when this is very low/very high. it’s 50ms by default
+
+As a rule of thumb, figure out the latency of the slowest network link between
+your nodes, e.g. by using `ping(8)`. Then, set `HeartbeatTimeout` to 10 times
+that latency so that brief network latency spikes are not a problem. Set all
+the other timeouts to the same value.
+
+=== MaxAppendEntries ===
+
+TODO(secure): run some experiments to see if we should recommend tuning this value
+
+=== SnapshotThreshold ===
+
+TODO(secure): document
+
+=== TrailingLogs ===
+
+TrailingLogs is the number of raft log entries which are kept after taking a
+snapshot. If you have enough log entries to cover a brief node failure (e.g. a
+flaky network), raft does not need to send an entire snapshot over the network,
+so recovery of the failed node may be quicker.
+
+In case you configure this parameter too low, recovery after a node failure may
+consume more bandwidth and may take longer.
+
+In case you configure this parameter too high, the disk usage of RobustIRC will
+be higher, as log compactions will occur less frequently.
+
+As a rule of thumb: look at your network’s messages/second, multiply that by
+the time of a typical outage, e.g. 5 minutes.
