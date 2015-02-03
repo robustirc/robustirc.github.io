@@ -104,6 +104,9 @@ $(document).ready(function() {
     }
 
     currentNetwork = network.value;
+    if (currentNetwork.trim() === '') {
+      currentNetwork = network.placeholder;
+    }
     $('.network').text(currentNetwork);
     $('.networkname').text(currentNetwork.replace(/\..*/, ''));
     updateHash();
