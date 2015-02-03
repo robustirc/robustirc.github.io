@@ -84,6 +84,20 @@ $GOPATH/bin/robustirc-bridge -network=<span class="network">robustirc.net</span>
 $(document).ready(function() {
   var network = $('#network')[0];
   var currentNetwork = network.value;
+  var client = $('#client')[0];
+  var currentClient = client.value;
+
+  var updateHash = function() {
+    var args = [];
+    if (currentNetwork != 'robustirc.net') {
+      args.push(currentNetwork);
+    }
+    if (currentClient != 'irssi') {
+      args.push(currentClient);
+    }
+    location.hash = '#' + args.join(',');
+  };
+
   var onNetworkChanged = function() {
     if (currentNetwork == network.value) {
       return;
@@ -92,11 +106,10 @@ $(document).ready(function() {
     currentNetwork = network.value;
     $('.network').text(currentNetwork);
     $('.networkname').text(currentNetwork.replace(/\..*/, ''));
+    updateHash();
   };
   $(network).on('change keypress paste input', onNetworkChanged);
 
-  var client = $('#client')[0];
-  var currentClient = client.value;
   var onClientChange = function() {
     if (currentClient == client.value) {
       return;
@@ -106,6 +119,7 @@ $(document).ready(function() {
     $('.client').text(currentClient);
     $('#clientinstructions pre').hide();
     $('#clientinstructions .instructions-'+currentClient).show();
+    updateHash();
   };
   $(client).on('change keypress paste input', onClientChange);
 
