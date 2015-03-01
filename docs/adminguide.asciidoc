@@ -154,26 +154,41 @@ TODO(secure): add latency measurements and explanation
 
 === Bridge ===
 
-The RobustIRC bridge is a program which bridges between the RobustIRC protocol and standard IRC footnote:[As defined per RFC2812.].
+The RobustIRC bridge is a program which bridges (translates) between the
+RobustIRC protocol and standard IRC, as defined per RFC2812.
 
-Depending on where the bridge runs, you get two benefits:
+There are two places where the bridge can run, each with their own benefits and
+drawback:
 
-1. You can connect to a RobustIRC network with your IRC client of choice.
-   Typically, RobustIRC networks will provide a bridge. The recommended
-   hostname is `legacy-irc.<networkname>`, e.g. `legacy-irc.robustirc.net`.
+Bridge runs on IRC client machine (recommended)::
+	Single-server unavailability and network partitions will be handled
+	transparently by the bridge. See <<failure_modes>> for details on the
+	failure modes.
++
+This is the recommended mode, but requires users to install the bridge
+on their machine(s).
 
-2. If the connection between the bridge and your IRC client is stable,
-   single-server unavailability and network partitions will be handled
-   transparently by the bridge. See <<failure_modes>> for details on the
-   failure modes. To get a stable connection to your bridge, you typically need
-   to run the bridge on the same machine as your IRC client.
+Bridge runs on network servers::
+	Typically, RobustIRC networks will provide a bridge. The recommended
+	hostname is `legacy-irc.<networkname>`, e.g.
+	`legacy-irc.robustirc.net`.
++
+The advantage is that users can directly connect to your network, but the
+bridges are single points of failures: in case a bridge server goes down, the
+users connected to it will be disconnected from the RobustIRC network.
 
 ==== SOCKS5 ====
 
 When running a bridge on the same machine as your IRC client, you’d run it
-using `robustirc-bridge -socks=localhost:1080` and then configure
-`localhost:1080` as the SOCKS5 proxy address to use for connecting to a network
-in your IRC client.
+using:
+
+.Starting the bridge in SOCKS proxy mode
+--------------------------------------------------------------------------------
+robustirc-bridge -socks=localhost:1080
+--------------------------------------------------------------------------------
+
+Then, configure `localhost:1080` as the SOCKS5 proxy address to use for
+connecting to a network in your IRC client.
 
 .WeeChat: configuring the RobustIRC bridge as a SOCKS proxy
 --------------------------------------------------------------------------------
@@ -255,7 +270,7 @@ SSL for servers::
 	You need a valid SSL certificate for every server you want to use in
 	your network. This can be a single wildcard certificate, or a
 	certificate with http://en.wikipedia.org/wiki/SubjectAltName[subject
-	alternate names].
+	alternative names].
 +
 .Example output for correctly installed SSL certificate:
 --------------------------------------------------------------------------------
