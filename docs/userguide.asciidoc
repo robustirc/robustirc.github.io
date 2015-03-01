@@ -1,11 +1,45 @@
-= RobustIRC User Guide =
+= RobustIRC Admin Guide =
 :numbered:
 :toc: right
 :stem: latexmath
 
+This Admin’s Guide is written for people who are interested in setting up a
+RobustIRC network.
+
+In case you have any questions that this document leaves unanswered, please
+https://github.com/robustirc/bridge/issues/new[file an issue on GitHub] so that
+we can answer your question and improve the document.
+
 == Motivation ==
 
+We started developing RobustIRC because we were annoyed enough by netsplits,
+but unsatisfied with alternatives to IRC. Netsplits can have many causes with
+the most common unforeseen one being actual networking-related trouble (packet
+loss/link unavailability). A foreseen but unavoidable one is software upgrades:
+with traditional IRC software, you are incentivized to upgrade the software
+(IRC server, operating system, kernel) on your IRC servers as rarely as
+possible, because every upgrade is an intrusive netsplit for the users of your
+IRC network.
+
+We think this is unacceptable in today’s world. We want to use IRC with all its
+various clients and bots, but we also want to be able to upgrade any server
+when we feel like it, and we don’t want to endure netsplits whenever a single
+TCP connection is flaky.
+
 == High-level Overview ==
+
+RobustIRC is a http://en.wikipedia.org/wiki/Distributed_computing[distributed
+system] which exposes standard IRC (as per
+https://tools.ietf.org/html/rfc2812[RFC2812]) via the RobustSession protocol,
+which gracefully handles TCP connection problems.
+
+Contrary to traditional IRC, where multiple servers are linked together to form
+an IRC network, RobustIRC provides one virtual IRC server that is distributed
+onto multiple machines.
+
+RobustIRC uses http://raftconsensus.github.io[the Raft consensus algorithm] to
+be resilient against server failures. Each message sent by the clients is first
+persisted using Raft, then processed by each RobustIRC server.
 
 [[failure_modes]]
 === Failure Modes ===
@@ -17,9 +51,10 @@ host machine will lead to not only a single-node failure, but a multiple-node
 failure.
 
 The number of nodes necessary to establish quorum depends on the number of
-nodes in the network. As an example, in a 3-node network, you need floor(n/2)+1
-= 2 nodes to reach quorum. In a 5-node network, you need floor(n/2)+1 = 3 nodes
-to reach quorum.
+nodes in the network. As an example, in a 3-node network, you need
+stem:[\left\lfloor \frac{n}{2} \right\rfloor+1 = 2] nodes to reach quorum. In a
+5-node network, you need stem:[\left\lfloor \frac{n}{2} \right\rfloor+1 = 3]
+nodes to reach quorum.
 
 ==== Node Failures ====
 
@@ -64,6 +99,10 @@ failures at the same time to be unable to reach quorum.
 
 == Network Performance ==
 
+RobustIRC’s performance will typically be enough for small networks (a couple
+of hundred of users). In case you are running a bigger network, this section
+explains what’s relevant with regards to RobustIRC’s performance.
+
 When talking about RobustIRC performance, these are the dimensions of interest:
 
 messages/s:: This means messages per second for the entire IRC network, where
@@ -103,6 +142,10 @@ http://irc.netsplit.de/networks/top100.php[netsplit.de] has a list of the
 biggest networks (excluding some that don’t want to be counted, like freenode).
 The number of users for the top 10 range from 10,000 to 50,000 users.
 
+We also monitored IRCNet for a week and observed an average number of messages
+of about 2000 messages/s.
+
+[[latency]]
 === Latency ===
 
 TODO(secure): add latency measurements and explanation
@@ -166,13 +209,122 @@ robustirc-bridge -network=robustirc.net
 /connect robustirc
 --------------------------------------------------------------------------------
 
+Depending on your network connection, it might make sense to disable lag
+checking so that longer periods of network unavailability can be survived
+without forcing a disconnect (see section 5.9 of
+http://irssi.org/documentation/manual[the irssi manual]):
+
+.irssi: Disabling lag checking
+--------------------------------------------------------------------------------
+/set lag_check_time 0
+--------------------------------------------------------------------------------
+
 == Server Deployment ==
 
 === Number and Location ===
 
-TODO(secure): explain network sizes and trade-offs, explain how location of servers influences reliability
+For running a RobustIRC network, you need at least 3 different servers. While
+technically you can run 3 RobustIRC processes on the same server, that doesn’t
+make a lot of sense: the point of RobustIRC is to be resilient to certain
+failures, and when you put all your RobustIRC processes into the same failure
+domain, you don’t achieve that.
 
-=== Docker ===
+The ideal configuration for RobustIRC is to have each server in an entirely
+separate failure domain, i.e. on a different machine, in a different rack, with
+different power, with different network connectivity, in a different physical
+datacenter. For traditional hosting this typically means chosing different
+hosting providers, with cloud providers it means running in different
+availability zones.
+
+That said, pay attention to the network latency between your failure domains.
+See <<latency>> for how to determine the network latency and what it means.
+
+With regards to the number of servers, a network of 3 servers continues to work
+when 1 server is unreachable. A network of 5 servers continues to work when 2
+servers are unreachable, and so on. In general, a network of stem:[n] servers
+continues to work when stem:[n - (\left\lfloor \frac{n}{2} \right\rfloor+1)]
+servers are unreachable.
+
+Therefore, always use an odd number of servers in your network. Even numbers
+don’t increase the reliability, so they only increase the message commit
+latency due to increased quorum size.
+
+=== Preparation ===
+
+SSL for servers::
+	You need a valid SSL certificate for every server you want to use in
+	your network. This can be a single wildcard certificate, or a
+	certificate with http://en.wikipedia.org/wiki/SubjectAltName[subject
+	alternate names].
++
+.Example output for correctly installed SSL certificate:
+--------------------------------------------------------------------------------
+$ echo | openssl s_client -connect alp.robustirc.net:60667 | grep 'Verify return code'
+    Verify return code: 0 (ok)
+--------------------------------------------------------------------------------
+
+DNS entry for servers::
+	Each server must have a public DNS entry, i.e. an A record and
+	preferably also a AAAA record. You will need to make each node aware of
+	its own public DNS entry (e.g. “dock0.robustirc.net”) by specifying it
+	in the `-peer_addr` flag. This serves two purposes: it provides a
+	unique identifier for Raft to identify the node, and at the same time
+	describes where to connect to.
++
+.Example output for correctly set up DNS records:
+-------------------------------------------------
+$ host alp.robustirc.net
+alp.robustirc.net has address 46.20.246.99
+alp.robustirc.net has IPv6 address 2a02:2528:503:2::2
+-------------------------------------------------
+
+DNS for the network::
+	You need to create an http://en.wikipedia.org/wiki/SRV_record[SRV DNS
+	record] pointing to each host/port on which RobustIRC is running on.
+	This record (e.g.  “robustirc.net”) will be used by clients to connect
+	to your network.
++
+.Example output for a correctly set up DNS record:
+--------------------------------------------------
+$ dig +short -t SRV _robustirc._tcp.robustirc.net
+0 0 60667 dock0.robustirc.net.
+0 0 60667 alp.robustirc.net.
+0 0 60667 ridcully.robustirc.net.
+--------------------------------------------------
+
+[[status_page]]
+=== Status page ===
+
+RobustIRC provides a status page that you can access with your web browser.
+Simply connect to the host/port on which the server is listening (see the
+`-peer_addr` flag) and use “robustirc” as user with `-network_password` as
+password when asked to authenticate.
+
+As an example, assume you’re running a node with
+`-peer_addr=alp.robustirc.net:60667` and `-network_password=topsecret`. The URL
+for the status page is https://robustirc:topsecret@alp.robustirc.net:60667/
+
+=== Bootstrapping ===
+
+When bringing up your network for the first time, you need to run each node
+with a special command line parameter: the first node you start needs the
+`-singlenode` flag, and all other nodes need the `-join=<address>` flag, where
+`<address>` is the `-peer_addr` value of the first node.
+
+Bootstrapping is finished once the network converged, meaning all <<status_page>>s
+display a node state of either “Follower” or “Leader” (as opposed to
+“Candidate” or “<nil>”).
+
+Once bootstrapping is finished, *be sure to remove the `-singlenode` and `-join`
+flags*! Neglecting to remove them could lead to data loss (for `-singlenode`) or
+unavailability after the list of peers changes (for `-join`).
+
+=== Installing & Running ===
+
+We strongly recommend using Docker since it makes running RobustIRC much easier.
+
+[[docker]]
+==== Docker ====
 
 You can use the official
 https://registry.hub.docker.com/u/robustirc/robustirc/[docker container
@@ -221,6 +373,97 @@ ExecStart=/usr/bin/docker run \
 WantedBy=multi-user.target
 --------------------------------------------------------------------------------
 
+==== From source ====
+
+After installing the Go compiler from your distribution’s packages, run:
+
+--------------------------------------------------------------------------------
+$ export GOPATH=~/gocode
+$ go get github.com/robustirc/robustirc/...
+--------------------------------------------------------------------------------
+
+You’ll end up with all RobustIRC binaries installed in `~/gocode/bin/`.
+
+=== Updates ===
+
+The <<docker>> container we provide always has a “stable” tag pointing at the
+most recently released version that was tested for at least 7 days on the
+robustirc.net network. We recommend you follow the “stable” tag, but if you
+prefer, you can directly follow the “latest” tag instead.
+
+In order to update to a newer version, all you need to do is run the newer
+RobustIRC binary. You will never need to manually migrate the on-disk data.
+This allows you to do automatic or semi-automatic updates: you could use an
+`ExecStartPre` directive to automatically pull the new docker container as
+outlined in the <<docker>> section above. If you chose to not use docker, the
+equivalent action would be to install the new RobustIRC binary on all nodes.
+
+To make the switch to the new RobustIRC binary easier, there is a tool called
+`robustirc-rollingrestart`. It quits each node, expecting the node to
+automatically be restarted and pick up the target binary version. Network
+health is taken into account before quitting a node, so if the update is
+unsuccessful for whichever reason, you will lose one node at most and your
+network as a whole will still work. Updates by `robustirc-rollingrestart` are
+unobtrusive; users cannot tell that the update even happened.
+
+=== Monitoring ===
+
+TODO(secure): publish a prometheus configuration
+
+== Network configuration ==
+
+Since the network configuration can influence the IRC output messages (e.g.
+whether the `OPER` command succeeds), it is persisted via Raft like any other
+RobustIRC message.
+
+We use https://github.com/toml-lang/toml[TOML] as configuration language.
+
+To edit the network configuration, use the `robustirc-editconfig` command-line
+tool, which will spawn an `$EDITOR` with the current config and update the
+config once you leave the editor. You’ll need to specify the `-network` flag
+and the `-network_password` flag:
+
+.robustirc-editconfig example:
+--------------------------------------------------------------------------------
+$ robustirc-editconfig -network=robustirc.net -network_password=secret
+--------------------------------------------------------------------------------
+
+=== Example (annotated) ===
+
+See the next subsections for detailed descriptions of each of these parameters.
+
+.Config example:
+--------------------------------------------------------------------------------
+# Sessions without activity are expired after TODO
+SessionExpiration = 1800000000000
+
+# Messages are throttled to 2 messages/s
+PostMessageCooloff = 500000000
+
+[IRC]
+[[IRC.Operators]]
+Name = "foo"
+Password = "bar"
+--------------------------------------------------------------------------------
+
+=== General parameters ===
+
+SessionExpiration::
+	TODO
+
+PostMessageCooloff::
+	TODO
+
+=== IRC parameters ===
+
+==== Operators ====
+
+Name, Password::
+	These two parameters specify the name and password that need to be
+	specified in the `OPER` command to become an IRC operator. Typically,
+	name correlates with the IRC nickname of the person who should be
+	granted IRC Operator privileges.
+
 == Raft Configuration ==
 
 === Timeouts ===
@@ -252,19 +495,22 @@ your nodes, e.g. by using `ping(8)`. Then, set `HeartbeatTimeout` to 10 times
 that latency so that brief network latency spikes are not a problem. Set all
 the other timeouts to the same value.
 
+If you run your network really hot and notice that leadership is often lost,
+you need to increase these timeouts to allow for more slack.
+
 === MaxAppendEntries ===
 
 TODO(secure): run some experiments to see if we should recommend tuning this value
 
 === SnapshotThreshold ===
 
-TODO(secure): document
+TODO(secure): document SnapshotThreshold
 
 === TrailingLogs ===
 
-TrailingLogs is the number of raft log entries which are kept after taking a
+TrailingLogs is the number of Raft log entries which are kept after taking a
 snapshot. If you have enough log entries to cover a brief node failure (e.g. a
-flaky network), raft does not need to send an entire snapshot over the network,
+flaky network), Raft does not need to send an entire snapshot over the network,
 so recovery of the failed node may be quicker.
 
 In case you configure this parameter too low, recovery after a node failure may

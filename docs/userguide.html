@@ -5,7 +5,7 @@
 <!--[if IE]><meta http-equiv="X-UA-Compatible" content="IE=edge"><![endif]-->
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 1.5.2">
-<title>RobustIRC User Guide</title>
+<title>RobustIRC Admin Guide</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400">
 <style>
 /* Asciidoctor default stylesheet | MIT License | http://asciidoctor.org */
@@ -426,7 +426,7 @@ MathJax.Hub.Config({
 </head>
 <body class="article toc2 toc-right">
 <div id="header">
-<h1>RobustIRC User Guide</h1>
+<h1>RobustIRC Admin Guide</h1>
 <div id="toc" class="toc2">
 <div id="toctitle">Table of Contents</div>
 <ul class="sectlevel1">
@@ -439,7 +439,7 @@ MathJax.Hub.Config({
 <li><a href="#_network_performance">3. Network Performance</a>
 <ul class="sectlevel2">
 <li><a href="#_ballpark_numbers">3.1. Ballpark numbers</a></li>
-<li><a href="#_latency">3.2. Latency</a></li>
+<li><a href="#latency">3.2. Latency</a></li>
 </ul>
 </li>
 <li><a href="#_clients">4. Clients</a>
@@ -450,30 +450,86 @@ MathJax.Hub.Config({
 <li><a href="#_server_deployment">5. Server Deployment</a>
 <ul class="sectlevel2">
 <li><a href="#_number_and_location">5.1. Number and Location</a></li>
-<li><a href="#_docker">5.2. Docker</a></li>
+<li><a href="#_preparation">5.2. Preparation</a></li>
+<li><a href="#status_page">5.3. Status page</a></li>
+<li><a href="#_bootstrapping">5.4. Bootstrapping</a></li>
+<li><a href="#_installing_running">5.5. Installing &amp; Running</a></li>
+<li><a href="#_updates">5.6. Updates</a></li>
+<li><a href="#_monitoring">5.7. Monitoring</a></li>
 </ul>
 </li>
-<li><a href="#_raft_configuration">6. Raft Configuration</a>
+<li><a href="#_network_configuration">6. Network configuration</a>
 <ul class="sectlevel2">
-<li><a href="#_timeouts">6.1. Timeouts</a></li>
-<li><a href="#_maxappendentries">6.2. MaxAppendEntries</a></li>
-<li><a href="#_snapshotthreshold">6.3. SnapshotThreshold</a></li>
-<li><a href="#_trailinglogs">6.4. TrailingLogs</a></li>
+<li><a href="#_example_annotated">6.1. Example (annotated)</a></li>
+<li><a href="#_general_parameters">6.2. General parameters</a></li>
+<li><a href="#_irc_parameters">6.3. IRC parameters</a></li>
+</ul>
+</li>
+<li><a href="#_raft_configuration">7. Raft Configuration</a>
+<ul class="sectlevel2">
+<li><a href="#_timeouts">7.1. Timeouts</a></li>
+<li><a href="#_maxappendentries">7.2. MaxAppendEntries</a></li>
+<li><a href="#_snapshotthreshold">7.3. SnapshotThreshold</a></li>
+<li><a href="#_trailinglogs">7.4. TrailingLogs</a></li>
 </ul>
 </li>
 </ul>
 </div>
 </div>
 <div id="content">
+<div id="preamble">
+<div class="sectionbody">
+<div class="paragraph">
+<p>This Admin’s Guide is written for people who are interested in setting up a
+RobustIRC network.</p>
+</div>
+<div class="paragraph">
+<p>In case you have any questions that this document leaves unanswered, please
+<a href="https://github.com/robustirc/bridge/issues/new">file an issue on GitHub</a> so that
+we can answer your question and improve the document.</p>
+</div>
+</div>
+</div>
 <div class="sect1">
 <h2 id="_motivation">1. Motivation</h2>
 <div class="sectionbody">
-
+<div class="paragraph">
+<p>We started developing RobustIRC because we were annoyed enough by netsplits,
+but unsatisfied with alternatives to IRC. Netsplits can have many causes with
+the most common unforeseen one being actual networking-related trouble (packet
+loss/link unavailability). A foreseen but unavoidable one is software upgrades:
+with traditional IRC software, you are incentivized to upgrade the software
+(IRC server, operating system, kernel) on your IRC servers as rarely as
+possible, because every upgrade is an intrusive netsplit for the users of your
+IRC network.</p>
+</div>
+<div class="paragraph">
+<p>We think this is unacceptable in today’s world. We want to use IRC with all its
+various clients and bots, but we also want to be able to upgrade any server
+when we feel like it, and we don’t want to endure netsplits whenever a single
+TCP connection is flaky.</p>
+</div>
 </div>
 </div>
 <div class="sect1">
 <h2 id="_high_level_overview">2. High-level Overview</h2>
 <div class="sectionbody">
+<div class="paragraph">
+<p>RobustIRC is a <a href="http://en.wikipedia.org/wiki/Distributed_computing">distributed
+system</a> which exposes standard IRC (as per
+<a href="https://tools.ietf.org/html/rfc2812">RFC2812</a>) via the RobustSession protocol,
+which gracefully handles TCP connection problems.</p>
+</div>
+<div class="paragraph">
+<p>Contrary to traditional IRC, where multiple servers are linked together to form
+an IRC network, RobustIRC provides one virtual IRC server that is distributed
+onto multiple machines.</p>
+</div>
+<div class="paragraph">
+<p>RobustIRC uses <a href="http://raftconsensus.github.io">the Raft consensus algorithm</a> to
+be resilient against server failures. Each message sent by the clients is first
+persisted using Raft, then processed by each RobustIRC server.</p>
+</div>
 <div class="sect2">
 <h3 id="failure_modes">2.1. Failure Modes</h3>
 <div class="paragraph">
@@ -485,9 +541,10 @@ failure.</p>
 </div>
 <div class="paragraph">
 <p>The number of nodes necessary to establish quorum depends on the number of
-nodes in the network. As an example, in a 3-node network, you need floor(n/2)+1
-= 2 nodes to reach quorum. In a 5-node network, you need floor(n/2)+1 = 3 nodes
-to reach quorum.</p>
+nodes in the network. As an example, in a 3-node network, you need
+\(\left\lfloor \frac{n}{2} \right\rfloor+1 = 2\) nodes to reach quorum. In a
+5-node network, you need \(\left\lfloor \frac{n}{2} \right\rfloor+1 = 3\)
+nodes to reach quorum.</p>
 </div>
 <div class="sect3">
 <h4 id="_node_failures">2.1.1. Node Failures</h4>
@@ -545,6 +602,11 @@ failures at the same time to be unable to reach quorum.</p>
 <h2 id="_network_performance">3. Network Performance</h2>
 <div class="sectionbody">
 <div class="paragraph">
+<p>RobustIRC’s performance will typically be enough for small networks (a couple
+of hundred of users). In case you are running a bigger network, this section
+explains what’s relevant with regards to RobustIRC’s performance.</p>
+</div>
+<div class="paragraph">
 <p>When talking about RobustIRC performance, these are the dimensions of interest:</p>
 </div>
 <div class="dlist">
@@ -598,9 +660,13 @@ this translates to roughly \(\frac{320 * 1024^3}{30 * 24 * 60 * 60} / 100 =
 biggest networks (excluding some that don’t want to be counted, like freenode).
 The number of users for the top 10 range from 10,000 to 50,000 users.</p>
 </div>
+<div class="paragraph">
+<p>We also monitored IRCNet for a week and observed an average number of messages
+of about 2000 messages/s.</p>
+</div>
 </div>
 <div class="sect2">
-<h3 id="_latency">3.2. Latency</h3>
+<h3 id="latency">3.2. Latency</h3>
 <div class="paragraph">
 <p>TODO(secure): add latency measurements and explanation</p>
 </div>
@@ -683,6 +749,18 @@ configure <code>localhost:6667</code> as IRC server in your client.</p>
 /connect robustirc</pre>
 </div>
 </div>
+<div class="paragraph">
+<p>Depending on your network connection, it might make sense to disable lag
+checking so that longer periods of network unavailability can be survived
+without forcing a disconnect (see section 5.9 of
+<a href="http://irssi.org/documentation/manual">the irssi manual</a>):</p>
+</div>
+<div class="listingblock">
+<div class="title">irssi: Disabling lag checking</div>
+<div class="content">
+<pre>/set lag_check_time 0</pre>
+</div>
+</div>
 </div>
 </div>
 </div>
@@ -693,11 +771,131 @@ configure <code>localhost:6667</code> as IRC server in your client.</p>
 <div class="sect2">
 <h3 id="_number_and_location">5.1. Number and Location</h3>
 <div class="paragraph">
-<p>TODO(secure): explain network sizes and trade-offs, explain how location of servers influences reliability</p>
+<p>For running a RobustIRC network, you need at least 3 different servers. While
+technically you can run 3 RobustIRC processes on the same server, that doesn’t
+make a lot of sense: the point of RobustIRC is to be resilient to certain
+failures, and when you put all your RobustIRC processes into the same failure
+domain, you don’t achieve that.</p>
+</div>
+<div class="paragraph">
+<p>The ideal configuration for RobustIRC is to have each server in an entirely
+separate failure domain, i.e. on a different machine, in a different rack, with
+different power, with different network connectivity, in a different physical
+datacenter. For traditional hosting this typically means chosing different
+hosting providers, with cloud providers it means running in different
+availability zones.</p>
+</div>
+<div class="paragraph">
+<p>That said, pay attention to the network latency between your failure domains.
+See <a href="#latency">Latency</a> for how to determine the network latency and what it means.</p>
+</div>
+<div class="paragraph">
+<p>With regards to the number of servers, a network of 3 servers continues to work
+when 1 server is unreachable. A network of 5 servers continues to work when 2
+servers are unreachable, and so on. In general, a network of \(n\) servers
+continues to work when \(n - (\left\lfloor \frac{n}{2} \right\rfloor+1)\)
+servers are unreachable.</p>
+</div>
+<div class="paragraph">
+<p>Therefore, always use an odd number of servers in your network. Even numbers
+don’t increase the reliability, so they only increase the message commit
+latency due to increased quorum size.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_docker">5.2. Docker</h3>
+<h3 id="_preparation">5.2. Preparation</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">SSL for servers</dt>
+<dd>
+<p>You need a valid SSL certificate for every server you want to use in
+your network. This can be a single wildcard certificate, or a
+certificate with <a href="http://en.wikipedia.org/wiki/SubjectAltName">subject
+alternate names</a>.</p>
+<div class="listingblock">
+<div class="title">Example output for correctly installed SSL certificate:</div>
+<div class="content">
+<pre>$ echo | openssl s_client -connect alp.robustirc.net:60667 | grep 'Verify return code'
+    Verify return code: 0 (ok)</pre>
+</div>
+</div>
+</dd>
+<dt class="hdlist1">DNS entry for servers</dt>
+<dd>
+<p>Each server must have a public DNS entry, i.e. an A record and
+preferably also a AAAA record. You will need to make each node aware of
+its own public DNS entry (e.g. “dock0.robustirc.net”) by specifying it
+in the <code>-peer_addr</code> flag. This serves two purposes: it provides a
+unique identifier for Raft to identify the node, and at the same time
+describes where to connect to.</p>
+<div class="listingblock">
+<div class="title">Example output for correctly set up DNS records:</div>
+<div class="content">
+<pre>$ host alp.robustirc.net
+alp.robustirc.net has address 46.20.246.99
+alp.robustirc.net has IPv6 address 2a02:2528:503:2::2</pre>
+</div>
+</div>
+</dd>
+<dt class="hdlist1">DNS for the network</dt>
+<dd>
+<p>You need to create an <a href="http://en.wikipedia.org/wiki/SRV_record">SRV DNS
+record</a> pointing to each host/port on which RobustIRC is running on.
+This record (e.g.  “robustirc.net”) will be used by clients to connect
+to your network.</p>
+<div class="listingblock">
+<div class="title">Example output for a correctly set up DNS record:</div>
+<div class="content">
+<pre>$ dig +short -t SRV _robustirc._tcp.robustirc.net
+0 0 60667 dock0.robustirc.net.
+0 0 60667 alp.robustirc.net.
+0 0 60667 ridcully.robustirc.net.</pre>
+</div>
+</div>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="status_page">5.3. Status page</h3>
+<div class="paragraph">
+<p>RobustIRC provides a status page that you can access with your web browser.
+Simply connect to the host/port on which the server is listening (see the
+<code>-peer_addr</code> flag) and use “robustirc” as user with <code>-network_password</code> as
+password when asked to authenticate.</p>
+</div>
+<div class="paragraph">
+<p>As an example, assume you’re running a node with
+<code>-peer_addr=alp.robustirc.net:60667</code> and <code>-network_password=topsecret</code>. The URL
+for the status page is <a href="https://robustirc:topsecret@alp.robustirc.net:60667/" class="bare">https://robustirc:topsecret@alp.robustirc.net:60667/</a></p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_bootstrapping">5.4. Bootstrapping</h3>
+<div class="paragraph">
+<p>When bringing up your network for the first time, you need to run each node
+with a special command line parameter: the first node you start needs the
+<code>-singlenode</code> flag, and all other nodes need the <code>-join=&lt;address&gt;</code> flag, where
+<code>&lt;address&gt;</code> is the <code>-peer_addr</code> value of the first node.</p>
+</div>
+<div class="paragraph">
+<p>Bootstrapping is finished once the network converged, meaning all <a href="#status_page">Status page</a>s
+display a node state of either “Follower” or “Leader” (as opposed to
+“Candidate” or “&lt;nil&gt;”).</p>
+</div>
+<div class="paragraph">
+<p>Once bootstrapping is finished, <strong>be sure to remove the <code>-singlenode</code> and <code>-join</code>
+flags</strong>! Neglecting to remove them could lead to data loss (for <code>-singlenode</code>) or
+unavailability after the list of peers changes (for <code>-join</code>).</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_installing_running">5.5. Installing &amp; Running</h3>
+<div class="paragraph">
+<p>We strongly recommend using Docker since it makes running RobustIRC much easier.</p>
+</div>
+<div class="sect3">
+<h4 id="docker">5.5.1. Docker</h4>
 <div class="paragraph">
 <p>You can use the official
 <a href="https://registry.hub.docker.com/u/robustirc/robustirc/">docker container
@@ -751,13 +949,139 @@ WantedBy=multi-user.target</pre>
 </div>
 </div>
 </div>
+<div class="sect3">
+<h4 id="_from_source">5.5.2. From source</h4>
+<div class="paragraph">
+<p>After installing the Go compiler from your distribution’s packages, run:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>$ export GOPATH=~/gocode
+$ go get github.com/robustirc/robustirc/...</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>You’ll end up with all RobustIRC binaries installed in <code>~/gocode/bin/</code>.</p>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_updates">5.6. Updates</h3>
+<div class="paragraph">
+<p>The <a href="#docker">Docker</a> container we provide always has a “stable” tag pointing at the
+most recently released version that was tested for at least 7 days on the
+robustirc.net network. We recommend you follow the “stable” tag, but if you
+prefer, you can directly follow the “latest” tag instead.</p>
+</div>
+<div class="paragraph">
+<p>In order to update to a newer version, all you need to do is run the newer
+RobustIRC binary. You will never need to manually migrate the on-disk data.
+This allows you to do automatic or semi-automatic updates: you could use an
+<code>ExecStartPre</code> directive to automatically pull the new docker container as
+outlined in the <a href="#docker">Docker</a> section above. If you chose to not use docker, the
+equivalent action would be to install the new RobustIRC binary on all nodes.</p>
+</div>
+<div class="paragraph">
+<p>To make the switch to the new RobustIRC binary easier, there is a tool called
+<code>robustirc-rollingrestart</code>. It quits each node, expecting the node to
+automatically be restarted and pick up the target binary version. Network
+health is taken into account before quitting a node, so if the update is
+unsuccessful for whichever reason, you will lose one node at most and your
+network as a whole will still work. Updates by <code>robustirc-rollingrestart</code> are
+unobtrusive; users cannot tell that the update even happened.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_monitoring">5.7. Monitoring</h3>
+<div class="paragraph">
+<p>TODO(secure): publish a prometheus configuration</p>
+</div>
+</div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_raft_configuration">6. Raft Configuration</h2>
+<h2 id="_network_configuration">6. Network configuration</h2>
+<div class="sectionbody">
+<div class="paragraph">
+<p>Since the network configuration can influence the IRC output messages (e.g.
+whether the <code>OPER</code> command succeeds), it is persisted via Raft like any other
+RobustIRC message.</p>
+</div>
+<div class="paragraph">
+<p>We use <a href="https://github.com/toml-lang/toml">TOML</a> as configuration language.</p>
+</div>
+<div class="paragraph">
+<p>To edit the network configuration, use the <code>robustirc-editconfig</code> command-line
+tool, which will spawn an <code>$EDITOR</code> with the current config and update the
+config once you leave the editor. You’ll need to specify the <code>-network</code> flag
+and the <code>-network_password</code> flag:</p>
+</div>
+<div class="listingblock">
+<div class="title">robustirc-editconfig example:</div>
+<div class="content">
+<pre>$ robustirc-editconfig -network=robustirc.net -network_password=secret</pre>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_example_annotated">6.1. Example (annotated)</h3>
+<div class="paragraph">
+<p>See the next subsections for detailed descriptions of each of these parameters.</p>
+</div>
+<div class="listingblock">
+<div class="title">Config example:</div>
+<div class="content">
+<pre># Sessions without activity are expired after TODO
+SessionExpiration = 1800000000000
+
+# Messages are throttled to 2 messages/s
+PostMessageCooloff = 500000000
+
+[IRC]
+[[IRC.Operators]]
+Name = "foo"
+Password = "bar"</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_general_parameters">6.2. General parameters</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">SessionExpiration</dt>
+<dd>
+<p>TODO</p>
+</dd>
+<dt class="hdlist1">PostMessageCooloff</dt>
+<dd>
+<p>TODO</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_irc_parameters">6.3. IRC parameters</h3>
+<div class="sect3">
+<h4 id="_operators">6.3.1. Operators</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Name, Password</dt>
+<dd>
+<p>These two parameters specify the name and password that need to be
+specified in the <code>OPER</code> command to become an IRC operator. Typically,
+name correlates with the IRC nickname of the person who should be
+granted IRC Operator privileges.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_raft_configuration">7. Raft Configuration</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_timeouts">6.1. Timeouts</h3>
+<h3 id="_timeouts">7.1. Timeouts</h3>
 <div class="paragraph">
 <p>Timeouts must fulfill this relation:</p>
 </div>
@@ -801,25 +1125,29 @@ your nodes, e.g. by using <code>ping(8)</code>. Then, set <code>HeartbeatTimeout
 that latency so that brief network latency spikes are not a problem. Set all
 the other timeouts to the same value.</p>
 </div>
+<div class="paragraph">
+<p>If you run your network really hot and notice that leadership is often lost,
+you need to increase these timeouts to allow for more slack.</p>
+</div>
 </div>
 <div class="sect2">
-<h3 id="_maxappendentries">6.2. MaxAppendEntries</h3>
+<h3 id="_maxappendentries">7.2. MaxAppendEntries</h3>
 <div class="paragraph">
 <p>TODO(secure): run some experiments to see if we should recommend tuning this value</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_snapshotthreshold">6.3. SnapshotThreshold</h3>
+<h3 id="_snapshotthreshold">7.3. SnapshotThreshold</h3>
 <div class="paragraph">
-<p>TODO(secure): document</p>
+<p>TODO(secure): document SnapshotThreshold</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_trailinglogs">6.4. TrailingLogs</h3>
+<h3 id="_trailinglogs">7.4. TrailingLogs</h3>
 <div class="paragraph">
-<p>TrailingLogs is the number of raft log entries which are kept after taking a
+<p>TrailingLogs is the number of Raft log entries which are kept after taking a
 snapshot. If you have enough log entries to cover a brief node failure (e.g. a
-flaky network), raft does not need to send an entire snapshot over the network,
+flaky network), Raft does not need to send an entire snapshot over the network,
 so recovery of the failed node may be quicker.</p>
 </div>
 <div class="paragraph">
@@ -846,7 +1174,7 @@ the time of a typical outage, e.g. 5 minutes.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-01-26 10:03:59 CET
+Last updated 2015-03-01 16:16:09 CET
 </div>
 </div>
 </body>
