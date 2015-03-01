@@ -145,10 +145,20 @@ The number of users for the top 10 range from 10,000 to 50,000 users.
 We also monitored IRCNet for a week and observed an average number of messages
 of about 2000 messages/s.
 
+=== Performance ===
+
+TODO
+
+//TODO(secure): add measurements of how well robustirc performs once we have benchmarks
+
+//TODO(secure): clarify how much bandwidth is necessary in comparison to legacy irc
+
 [[latency]]
 === Latency ===
 
-TODO(secure): add latency measurements and explanation
+TODO
+
+//TODO(secure): add latency measurements and explanation
 
 == Clients ==
 
@@ -279,12 +289,12 @@ $ echo | openssl s_client -connect alp.robustirc.net:60667 | grep 'Verify return
 --------------------------------------------------------------------------------
 
 DNS entry for servers::
-	Each server must have a public DNS entry, i.e. an A record and
-	preferably also a AAAA record. You will need to make each node aware of
+	Each server must have a public DNS entry, i.e. a AAAA record and
+	preferably also an A record. You will need to make each node aware of
 	its own public DNS entry (e.g. “dock0.robustirc.net”) by specifying it
-	in the `-peer_addr` flag. This serves two purposes: it provides a
-	unique identifier for Raft to identify the node, and at the same time
-	describes where to connect to.
+	in the `-peer_addr` flag when starting RobustIRC. This serves two
+	purposes: it provides a unique identifier for Raft to identify the
+	node, and at the same time describes where to connect to.
 +
 .Example output for correctly set up DNS records:
 -------------------------------------------------
@@ -318,6 +328,9 @@ password when asked to authenticate.
 As an example, assume you’re running a node with
 `-peer_addr=alp.robustirc.net:60667` and `-network_password=topsecret`. The URL
 for the status page is https://robustirc:topsecret@alp.robustirc.net:60667/
+
+The same port is used for the status page, communication between the nodes and
+communication with the clients.
 
 === Bootstrapping ===
 
@@ -423,7 +436,9 @@ unobtrusive; users cannot tell that the update even happened.
 
 === Monitoring ===
 
-TODO(secure): publish a prometheus configuration
+TODO
+
+//TODO(secure): publish a prometheus configuration
 
 == Network configuration ==
 
@@ -483,11 +498,15 @@ Name, Password::
 
 === Timeouts ===
 
+If you run your network really hot and notice that leadership is often lost,
+you need to increase these timeouts to allow for more slack. Otherwise, you
+can ignore this entire section.
+
 Timeouts must fulfill this relation:
 
-5ms < LeaderLeaseTimeout <= HeartbeatTimeout <= ElectionTimeout
+5ms < LeaderLeaseTimeout ≤ HeartbeatTimeout ≤ ElectionTimeout
 
-default: 500ms (LeaderLeaseTimeout) <= 1000ms (HeartbeatTimeout) <= 1000ms (ElectionTimeout)
+default: 500ms (LeaderLeaseTimeout) ≤ 1000ms (HeartbeatTimeout) ≤ 1000ms (ElectionTimeout)
 
 LeaderLeaseTimeout:: a leader steps down (i.e. does not consider itself the
 leader anymore) after it was unable to contact a quorum of nodes for
@@ -502,24 +521,25 @@ be missed before HeartbeatTimeout is reached.
 ElectionTimeout:: candidates restart the voting process after ElectionTimeout.
 
 CommitTimeout:: See https://github.com/hashicorp/raft/issues/28[hashicorp/raft
-issue #28] for details. TODO(secure): run some experiments to see what happens
-when this is very low/very high. it’s 50ms by default
+issue #28] for details.
+// TODO(secure): run some experiments to see what happens when this is very low/very high. it’s 50ms by default
 
 As a rule of thumb, figure out the latency of the slowest network link between
 your nodes, e.g. by using `ping(8)`. Then, set `HeartbeatTimeout` to 10 times
 that latency so that brief network latency spikes are not a problem. Set all
 the other timeouts to the same value.
 
-If you run your network really hot and notice that leadership is often lost,
-you need to increase these timeouts to allow for more slack.
-
 === MaxAppendEntries ===
 
-TODO(secure): run some experiments to see if we should recommend tuning this value
+TODO
+
+//TODO(secure): run some experiments to see if we should recommend tuning this value
 
 === SnapshotThreshold ===
 
-TODO(secure): document SnapshotThreshold
+TODO
+
+// TODO(secure): document SnapshotThreshold
 
 === TrailingLogs ===
 

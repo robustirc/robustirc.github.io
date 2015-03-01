@@ -439,7 +439,8 @@ MathJax.Hub.Config({
 <li><a href="#_network_performance">3. Network Performance</a>
 <ul class="sectlevel2">
 <li><a href="#_ballpark_numbers">3.1. Ballpark numbers</a></li>
-<li><a href="#latency">3.2. Latency</a></li>
+<li><a href="#_performance">3.2. Performance</a></li>
+<li><a href="#latency">3.3. Latency</a></li>
 </ul>
 </li>
 <li><a href="#_clients">4. Clients</a>
@@ -666,9 +667,15 @@ of about 2000 messages/s.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="latency">3.2. Latency</h3>
+<h3 id="_performance">3.2. Performance</h3>
 <div class="paragraph">
-<p>TODO(secure): add latency measurements and explanation</p>
+<p>TODO</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="latency">3.3. Latency</h3>
+<div class="paragraph">
+<p>TODO</p>
 </div>
 </div>
 </div>
@@ -679,34 +686,53 @@ of about 2000 messages/s.</p>
 <div class="sect2">
 <h3 id="_bridge">4.1. Bridge</h3>
 <div class="paragraph">
-<p>The RobustIRC bridge is a program which bridges between the RobustIRC protocol and standard IRC <span class="footnote">[<a id="_footnoteref_1" class="footnote" href="#_footnote_1" title="View footnote.">1</a>]</span>.</p>
+<p>The RobustIRC bridge is a program which bridges (translates) between the
+RobustIRC protocol and standard IRC, as defined per RFC2812.</p>
 </div>
 <div class="paragraph">
-<p>Depending on where the bridge runs, you get two benefits:</p>
+<p>There are two places where the bridge can run, each with their own benefits and
+drawback:</p>
 </div>
-<div class="olist arabic">
-<ol class="arabic">
-<li>
-<p>You can connect to a RobustIRC network with your IRC client of choice.
-Typically, RobustIRC networks will provide a bridge. The recommended
-hostname is <code>legacy-irc.&lt;networkname&gt;</code>, e.g. <code>legacy-irc.robustirc.net</code>.</p>
-</li>
-<li>
-<p>If the connection between the bridge and your IRC client is stable,
-single-server unavailability and network partitions will be handled
+<div class="dlist">
+<dl>
+<dt class="hdlist1">Bridge runs on IRC client machine (recommended)</dt>
+<dd>
+<p>Single-server unavailability and network partitions will be handled
 transparently by the bridge. See <a href="#failure_modes">Failure Modes</a> for details on the
-failure modes. To get a stable connection to your bridge, you typically need
-to run the bridge on the same machine as your IRC client.</p>
-</li>
-</ol>
+failure modes.</p>
+<div class="paragraph">
+<p>This is the recommended mode, but requires users to install the bridge
+on their machine(s).</p>
+</div>
+</dd>
+<dt class="hdlist1">Bridge runs on network servers</dt>
+<dd>
+<p>Typically, RobustIRC networks will provide a bridge. The recommended
+hostname is <code>legacy-irc.&lt;networkname&gt;</code>, e.g.
+<code>legacy-irc.robustirc.net</code>.</p>
+<div class="paragraph">
+<p>The advantage is that users can directly connect to your network, but the
+bridges are single points of failures: in case a bridge server goes down, the
+users connected to it will be disconnected from the RobustIRC network.</p>
+</div>
+</dd>
+</dl>
 </div>
 <div class="sect3">
 <h4 id="_socks5">4.1.1. SOCKS5</h4>
 <div class="paragraph">
 <p>When running a bridge on the same machine as your IRC client, you’d run it
-using <code>robustirc-bridge -socks=localhost:1080</code> and then configure
-<code>localhost:1080</code> as the SOCKS5 proxy address to use for connecting to a network
-in your IRC client.</p>
+using:</p>
+</div>
+<div class="listingblock">
+<div class="title">Starting the bridge in SOCKS proxy mode</div>
+<div class="content">
+<pre>robustirc-bridge -socks=localhost:1080</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>Then, configure <code>localhost:1080</code> as the SOCKS5 proxy address to use for
+connecting to a network in your IRC client.</p>
 </div>
 <div class="listingblock">
 <div class="title">WeeChat: configuring the RobustIRC bridge as a SOCKS proxy</div>
@@ -811,7 +837,7 @@ latency due to increased quorum size.</p>
 <p>You need a valid SSL certificate for every server you want to use in
 your network. This can be a single wildcard certificate, or a
 certificate with <a href="http://en.wikipedia.org/wiki/SubjectAltName">subject
-alternate names</a>.</p>
+alternative names</a>.</p>
 <div class="listingblock">
 <div class="title">Example output for correctly installed SSL certificate:</div>
 <div class="content">
@@ -822,12 +848,12 @@ alternate names</a>.</p>
 </dd>
 <dt class="hdlist1">DNS entry for servers</dt>
 <dd>
-<p>Each server must have a public DNS entry, i.e. an A record and
-preferably also a AAAA record. You will need to make each node aware of
+<p>Each server must have a public DNS entry, i.e. a AAAA record and
+preferably also an A record. You will need to make each node aware of
 its own public DNS entry (e.g. “dock0.robustirc.net”) by specifying it
-in the <code>-peer_addr</code> flag. This serves two purposes: it provides a
-unique identifier for Raft to identify the node, and at the same time
-describes where to connect to.</p>
+in the <code>-peer_addr</code> flag when starting RobustIRC. This serves two
+purposes: it provides a unique identifier for Raft to identify the
+node, and at the same time describes where to connect to.</p>
 <div class="listingblock">
 <div class="title">Example output for correctly set up DNS records:</div>
 <div class="content">
@@ -868,6 +894,10 @@ password when asked to authenticate.</p>
 <p>As an example, assume you’re running a node with
 <code>-peer_addr=alp.robustirc.net:60667</code> and <code>-network_password=topsecret</code>. The URL
 for the status page is <a href="https://robustirc:topsecret@alp.robustirc.net:60667/" class="bare">https://robustirc:topsecret@alp.robustirc.net:60667/</a></p>
+</div>
+<div class="paragraph">
+<p>The same port is used for the status page, communication between the nodes and
+communication with the clients.</p>
 </div>
 </div>
 <div class="sect2">
@@ -994,7 +1024,7 @@ unobtrusive; users cannot tell that the update even happened.</p>
 <div class="sect2">
 <h3 id="_monitoring">5.7. Monitoring</h3>
 <div class="paragraph">
-<p>TODO(secure): publish a prometheus configuration</p>
+<p>TODO</p>
 </div>
 </div>
 </div>
@@ -1083,13 +1113,18 @@ granted IRC Operator privileges.</p>
 <div class="sect2">
 <h3 id="_timeouts">7.1. Timeouts</h3>
 <div class="paragraph">
+<p>If you run your network really hot and notice that leadership is often lost,
+you need to increase these timeouts to allow for more slack. Otherwise, you
+can ignore this entire section.</p>
+</div>
+<div class="paragraph">
 <p>Timeouts must fulfill this relation:</p>
 </div>
 <div class="paragraph">
-<p>5ms &lt; LeaderLeaseTimeout &#8656; HeartbeatTimeout &#8656; ElectionTimeout</p>
+<p>5ms &lt; LeaderLeaseTimeout ≤ HeartbeatTimeout ≤ ElectionTimeout</p>
 </div>
 <div class="paragraph">
-<p>default: 500ms (LeaderLeaseTimeout) &#8656; 1000ms (HeartbeatTimeout) &#8656; 1000ms (ElectionTimeout)</p>
+<p>default: 500ms (LeaderLeaseTimeout) ≤ 1000ms (HeartbeatTimeout) ≤ 1000ms (ElectionTimeout)</p>
 </div>
 <div class="dlist">
 <dl>
@@ -1114,8 +1149,7 @@ be missed before HeartbeatTimeout is reached.</p>
 <dt class="hdlist1">CommitTimeout</dt>
 <dd>
 <p>See <a href="https://github.com/hashicorp/raft/issues/28">hashicorp/raft
-issue #28</a> for details. TODO(secure): run some experiments to see what happens
-when this is very low/very high. it’s 50ms by default</p>
+issue #28</a> for details.</p>
 </dd>
 </dl>
 </div>
@@ -1125,21 +1159,17 @@ your nodes, e.g. by using <code>ping(8)</code>. Then, set <code>HeartbeatTimeout
 that latency so that brief network latency spikes are not a problem. Set all
 the other timeouts to the same value.</p>
 </div>
-<div class="paragraph">
-<p>If you run your network really hot and notice that leadership is often lost,
-you need to increase these timeouts to allow for more slack.</p>
-</div>
 </div>
 <div class="sect2">
 <h3 id="_maxappendentries">7.2. MaxAppendEntries</h3>
 <div class="paragraph">
-<p>TODO(secure): run some experiments to see if we should recommend tuning this value</p>
+<p>TODO</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_snapshotthreshold">7.3. SnapshotThreshold</h3>
 <div class="paragraph">
-<p>TODO(secure): document SnapshotThreshold</p>
+<p>TODO</p>
 </div>
 </div>
 <div class="sect2">
@@ -1166,15 +1196,9 @@ the time of a typical outage, e.g. 5 minutes.</p>
 </div>
 </div>
 </div>
-<div id="footnotes">
-<hr>
-<div class="footnote" id="_footnote_1">
-<a href="#_footnoteref_1">1</a>. As defined per RFC2812.
-</div>
-</div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-03-01 16:16:09 CET
+Last updated 2015-03-01 20:44:09 CET
 </div>
 </div>
 </body>
