@@ -499,11 +499,11 @@ See the next subsections for detailed descriptions of each of these parameters.
 
 .Config example:
 --------------------------------------------------------------------------------
-# Sessions without activity are expired after TODO
-SessionExpiration = 1800000000000
+# Sessions without activity are expired after half an hour.
+SessionExpiration = "30m0s"
 
-# Messages are throttled to 2 messages/s
-PostMessageCooloff = 500000000
+# Messages are throttled to 2 messages/s.
+PostMessageCooloff = "500ms"
 
 [IRC]
 [[IRC.Operators]]

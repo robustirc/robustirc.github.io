@@ -1100,11 +1100,11 @@ and the <code>-network_password</code> flag:</p>
 <div class="listingblock">
 <div class="title">Config example:</div>
 <div class="content">
-<pre># Sessions without activity are expired after TODO
-SessionExpiration = 1800000000000
+<pre># Sessions without activity are expired after half an hour.
+SessionExpiration = "30m0s"
 
-# Messages are throttled to 2 messages/s
-PostMessageCooloff = 500000000
+# Messages are throttled to 2 messages/s.
+PostMessageCooloff = "500ms"
 
 [IRC]
 [[IRC.Operators]]
@@ -1238,7 +1238,7 @@ the time of a typical outage, e.g. 5 minutes.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-03-02 09:25:43 CET
+Last updated 2015-03-02 09:57:31 CET
 </div>
 </div>
 </body>
