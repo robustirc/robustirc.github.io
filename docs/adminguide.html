@@ -1011,6 +1011,8 @@ This allows you to do automatic or semi-automatic updates: you could use an
 outlined in the <a href="#docker">Docker</a> section above. If you chose to not use docker, the
 equivalent action would be to install the new RobustIRC binary on all nodes.</p>
 </div>
+<div class="sect3">
+<h4 id="_rolling_restart">5.6.1. Rolling restart</h4>
 <div class="paragraph">
 <p>To make the switch to the new RobustIRC binary easier, there is a tool called
 <code>robustirc-rollingrestart</code>. It quits each node, expecting the node to
@@ -1019,6 +1021,44 @@ health is taken into account before quitting a node, so if the update is
 unsuccessful for whichever reason, you will lose one node at most and your
 network as a whole will still work. Updates by <code>robustirc-rollingrestart</code> are
 unobtrusive; users cannot tell that the update even happened.</p>
+</div>
+<div class="listingblock">
+<div class="title">robustirc-rollingrestart example output (shortened)</div>
+<div class="content">
+<pre>$ robustirc-rollingrestart -binary_path=$PWD/robustirc -network=robustirc.net -network_password=secret
+
+21:38:51 Checking network health
+21:38:51 Restarting "robustirc.net" nodes until their binary hash is b3d57b4153ee3dca93b3c8d8f787eccb
+21:38:51 Killing node "ridcully.robustirc.net:60667"
+21:38:51 Post https://ridcully.robustirc.net:60667/quit: EOF
+21:38:52 Get https://ridcully.robustirc.net:60667/: dial tcp 78.46.97.235:60667: connection refused
+[…]
+21:39:17 Node "ridcully.robustirc.net:60667" has not yet applied all messages it saw before, waiting (got 282270, want ≥ 285055)
+21:39:27 Node "ridcully.robustirc.net:60667" was upgraded and is healthy again
+21:39:27 Skipping "alp.robustirc.net:60667" which is already running the requested version
+21:39:27 Killing node "dock0.robustirc.net:60667"
+21:39:27 Quitting "dock0.robustirc.net:60667": Post https://dock0.robustirc.net:60667/quit: EOF
+[…]
+21:40:34 Network is not healthy: Server "dock0.robustirc.net:60667" was last contacted by the leader at 0001-01-01 00:00:00 +0000 UTC, which is over a second ago
+21:40:35 Network became healthy.
+21:40:35 All done!</pre>
+</div>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_canary_mode">5.6.2. Canary mode</h4>
+<div class="paragraph">
+<p>In order to make sure that a new version of RobustIRC processes the on-disk
+input messages the same way as the version you’re currently running, you can
+use canary mode. Canary mode connects to the network, downloads all input
+messages and their corresponding output, re-processes the messages locally and
+then generates a report with all the differences. It never joins the network,
+so it doesn’t modify any state.</p>
+</div>
+<div class="paragraph">
+<p>We expect canary mode to only be used by developers, but include it in this
+document for completeness.</p>
+</div>
 </div>
 </div>
 <div class="sect2">
@@ -1198,7 +1238,7 @@ the time of a typical outage, e.g. 5 minutes.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-03-01 20:44:09 CET
+Last updated 2015-03-02 09:25:43 CET
 </div>
 </div>
 </body>
