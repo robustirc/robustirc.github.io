@@ -502,22 +502,39 @@ See the next subsections for detailed descriptions of each of these parameters.
 # Sessions without activity are expired after half an hour.
 SessionExpiration = "30m0s"
 
-# Messages are throttled to 2 messages/s.
+# Messages are (eventually) throttled to 2 messages/s.
 PostMessageCooloff = "500ms"
 
 [IRC]
-[[IRC.Operators]]
-Name = "foo"
-Password = "bar"
+  [[IRC.Operators]]
+    Name = "foo"
+    Password = "bar"
+
+  [[IRC.Services]]
+    Password = "mypass"
 --------------------------------------------------------------------------------
 
 === General parameters ===
 
 SessionExpiration::
-	TODO
+	Sessions expire after no activity for this duration. Defaults to 30
+	minutes. Note that the bridge sends a PING message (which counts as
+	activity) after 1 minute of inactivity. With the default value of 30
+	minutes, a network outage lasting less than 30 minutes can be recovered
+	from.
 
 PostMessageCooloff::
-	TODO
+	RobustIRC uses throttling that ramps up exponentially from 1ms to the
+	specified duration. As an example, the enforced delays between four
+	messages are 1ms, 2ms, 4ms, etc. This pattern continues until it
+	reaches `PostMessageCooloff` (defaulting to 500ms). The throttling
+	starts over at 1ms when there was no activity for `PostMessageCooloff`.
++
+This approach was chosen because it does not throttle actual users too
+aggressively but still becomes effective quickly when attackers start
+flooding.
++
+Set `PostMessageCooloff` to 0 to disable any throttling (not recommended!).
 
 === IRC parameters ===
 
@@ -528,6 +545,14 @@ Name, Password::
 	specified in the `OPER` command to become an IRC operator. Typically,
 	name correlates with the IRC nickname of the person who should be
 	granted IRC Operator privileges.
+
+==== Services ====
+
+Password::
+	Specifies a password with which you can link IRC services (e.g. anope)
+	to RobustIRC. Note that this is not full server-to-server support and
+	will not be extended to become that. Only the bare minimum
+	server-to-server protocol was implemented to get services working.
 
 == Raft Configuration ==
 
