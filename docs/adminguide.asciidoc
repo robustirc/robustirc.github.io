@@ -7,8 +7,8 @@ This Admin’s Guide is written for people who are interested in setting up a
 RobustIRC network.
 
 In case you have any questions that this document leaves unanswered, please
-https://github.com/robustirc/bridge/issues/new[file an issue on GitHub] so that
-we can answer your question and improve the document.
+https://github.com/robustirc/robustirc.github.io/issues/new[file an issue on
+GitHub] so that we can answer your question and improve the document.
 
 == Motivation ==
 
