@@ -1,33 +1,9 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RobustIRC</title>
-<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
-<link href="jumbotron-narrow.css" rel="stylesheet">
-<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400">
-<style type="text/css">
-body {
-  font-family: "Open Sans";
-}
-</style>
-</head>
-<body>
-    <div class="container">
-      <div class="header">
-        <nav>
-          <ul class="nav nav-pills pull-right">
-            <li role="presentation" class="active"><a href="#">Home</a></li>
-            <!--
-            <li role="presentation"><a href="#">About</a></li>
-            <li role="presentation"><a href="#">Contact</a></li>
-            -->
-          </ul>
-        </nav>
-        <h3 class="text-muted">RobustIRC</h3>
-      </div>
+---
+layout: default
+title: RobustIRC
+menu: Home
+weight: 1
+---
 
       <div class="jumbotron" style="padding: 1em">
         <h2>RobustIRC is IRC without netsplits</h2>
@@ -67,98 +43,30 @@ $GOPATH/bin/robustirc-bridge -network=<span class="network">robustirc.net</span>
 
       <div class="row marketing">
         <div class="col-lg-6">
-          <h4>Currently in semi-private beta</h4>
+          <h4>No netsplits on server unavailability</h4>
 	  <p>
-	  We need to polish the software a lot more before we feel
-	  comfortable releasing it to the public. Until then, we are of course
-	  testing it extensively. If you are excited about the project, you’re
-	  welcome to talk to us about it.
+	  Traditional IRC networks split whenever a server has brief network
+	  connectivity issues to the rest of the IRC network, or whenever a
+	  server needs to be upgraded. With RobustIRC, your users will not
+	  notice when you roll out a new version or reboot the machine on which
+	  a particular RobustIRC server is running.
+	  </p>
+
+          <h4>Robust against connectivity issues between clients and the network</h4>
+	  <p>
+	  A brief hickup of your internet connection means your session will be
+	  terminated in traditional IRC. With RobustIRC, you will transparently
+	  be connected to a different server.
+	  </p>
+
+          <h4>Standard IRC clients can be used</h4>
+	  <p>
+	  RobustIRC speaks IRC as per <a
+	  href="https://tools.ietf.org/html/rfc2812">RFC2812</a> (but tunneled
+	  over the <a href="/docs/robustsession.html">RobustSession
+	  protocol</a>). After installing the RobustIRC bridge, you can keep
+	  using your favorite IRC client and configure a RobustIRC network just
+	  like any other IRC network.
 	  </p>
         </div>
       </div>
-
-      <footer class="footer" style="text-align: center">
-        <p>&copy; 2014-2015 <a href="https://github.com/robustirc/bridge/blob/master/AUTHORS">The RobustIRC Authors</a></p>
-      </footer>
-
-    </div>
-
-<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
-<script type="text/javascript" src="jquery.ba-hashchange.min.js"></script>
-<script type="text/javascript">
-$(document).ready(function() {
-  var network = $('#network')[0];
-  var currentNetwork = network.value;
-  var client = $('#client')[0];
-  var currentClient = client.value;
-
-  var updateHash = function() {
-    var args = [];
-    if (currentNetwork != 'robustirc.net') {
-      args.push(currentNetwork);
-    }
-    if (currentClient != 'irssi') {
-      args.push(currentClient);
-    }
-    location.hash = '#' + args.join(',');
-  };
-
-  var onNetworkChanged = function() {
-    if (currentNetwork == network.value) {
-      return;
-    }
-
-    currentNetwork = network.value;
-    if (currentNetwork.trim() === '') {
-      currentNetwork = network.placeholder;
-    }
-    $('.network').text(currentNetwork);
-    $('.networkname').text(currentNetwork.replace(/\..*/, ''));
-    updateHash();
-  };
-  $(network).on('change keypress paste input', onNetworkChanged);
-
-  var onClientChange = function() {
-    if (currentClient == client.value) {
-      return;
-    }
-
-    currentClient = client.value;
-    $('.client').text(currentClient);
-    $('#clientinstructions pre').hide();
-    $('#clientinstructions .instructions-'+currentClient).show();
-    updateHash();
-  };
-  $(client).on('change keypress paste input', onClientChange);
-
-  $(window).hashchange(function() {
-    $.each(location.hash.replace(/^#/, '').split(","), function(idx, arg) {
-      // Check if this part of the hash is a client name.
-      var clientChanged = false;
-      $('#client option').each(function(idx, el) {
-        if (el.value == arg) {
-          $(el).attr('selected', 'selected');
-          clientChanged = true;
-          return false;
-        }
-      });
-      if (clientChanged) {
-        onClientChange();
-        return;
-      }
-
-      // If not, this is the network name.
-      if (arg.trim() !== "") {
-        network.value = arg;
-        onNetworkChanged();
-      }
-    });
-  });
-  $(window).hashchange();  
-});
-</script>
-</body>
-</html>
-<!--
-vim:ts=2:sw=2:et
--->

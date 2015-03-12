@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{ page.title }}</title>
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+<link href="jumbotron-narrow.css" rel="stylesheet">
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400">
+<style type="text/css">
+body {
+  font-family: "Open Sans";
+}
+
+.docs {
+  margin-bottom: 2em;
+}
+
+.docs li {
+  margin-top: 2em;
+}
+
+.contact li {
+  margin-top: 1em;
+}
+
+.releases a {
+  margin-right: 1em;
+}
+
+@font-face {
+  font-family: "fontcustom";
+  src: url("./fontcustom/fontcustom_cb066050d5b786186aa0e7f121427d8b.eot");
+  src: url("./fontcustom/fontcustom_cb066050d5b786186aa0e7f121427d8b.eot?#iefix") format("embedded-opentype"),
+       url("./fontcustom/fontcustom_cb066050d5b786186aa0e7f121427d8b.woff") format("woff"),
+       url("./fontcustom/fontcustom_cb066050d5b786186aa0e7f121427d8b.ttf") format("truetype"),
+       url("./fontcustom/fontcustom_cb066050d5b786186aa0e7f121427d8b.svg#fontcustom") format("svg");
+  font-weight: normal;
+  font-style: normal;
+}
+
+@media screen and (-webkit-min-device-pixel-ratio:0) {
+  @font-face {
+    font-family: "fontcustom";
+    src: url("./fontcustom/fontcustom_cb066050d5b786186aa0e7f121427d8b.svg#fontcustom") format("svg");
+  }
+}
+
+[data-icon]:before { content: attr(data-icon); }
+
+[data-icon]:before,
+.fa-docker:before {
+  display: inline-block;
+  font-family: "fontcustom";
+  font-style: normal;
+  font-weight: normal;
+  font-variant: normal;
+  line-height: 1;
+  text-decoration: inherit;
+  text-rendering: optimizeLegibility;
+  text-transform: none;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  font-smoothing: antialiased;
+}
+
+.fa-docker:before { content: "\f100"; }
+</style>
+</head>
+<body>
+    <div class="container">
+      <div class="header">
+        <nav>
+          <ul class="nav nav-pills pull-right">
+            {% assign pages = site.pages | sort:"weight" %}
+            {% for p in pages %}
+              <li role="presentation" {% if p.url == page.url %}class="active"{% endif %}><a href="{{ p.url }}">{{ p.menu }}</a></li>
+            {% endfor %}
+          </ul>
+        </nav>
+        <h3 class="text-muted">RobustIRC</h3>
+      </div>
+
+      {{ content }}
+
+      <footer class="footer" style="text-align: center">
+        <p>&copy; 2014-2015 <a href="https://github.com/robustirc/bridge/blob/master/AUTHORS">The RobustIRC Authors</a></p>
+      </footer>
+
+    </div>
+
+<!-- TODO: only include this on index -->
+<script type="text/javascript" src="//code.jquery.com/jquery-2.1.3.min.js"></script>
+<script type="text/javascript" src="jquery.ba-hashchange.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+  var network = $('#network')[0];
+  var currentNetwork = network.value;
+  var client = $('#client')[0];
+  var currentClient = client.value;
+
+  var updateHash = function() {
+    var args = [];
+    if (currentNetwork != 'robustirc.net') {
+      args.push(currentNetwork);
+    }
+    if (currentClient != 'irssi') {
+      args.push(currentClient);
+    }
+    location.hash = '#' + args.join(',');
+  };
+
+  var onNetworkChanged = function() {
+    if (currentNetwork == network.value) {
+      return;
+    }
+
+    currentNetwork = network.value;
+    if (currentNetwork.trim() === '') {
+      currentNetwork = network.placeholder;
+    }
+    $('.network').text(currentNetwork);
+    $('.networkname').text(currentNetwork.replace(/\..*/, ''));
+    updateHash();
+  };
+  $(network).on('change keypress paste input', onNetworkChanged);
+
+  var onClientChange = function() {
+    if (currentClient == client.value) {
+      return;
+    }
+
+    currentClient = client.value;
+    $('.client').text(currentClient);
+    $('#clientinstructions pre').hide();
+    $('#clientinstructions .instructions-'+currentClient).show();
+    updateHash();
+  };
+  $(client).on('change keypress paste input', onClientChange);
+
+  $(window).hashchange(function() {
+    $.each(location.hash.replace(/^#/, '').split(","), function(idx, arg) {
+      // Check if this part of the hash is a client name.
+      var clientChanged = false;
+      $('#client option').each(function(idx, el) {
+        if (el.value == arg) {
+          $(el).attr('selected', 'selected');
+          clientChanged = true;
+          return false;
+        }
+      });
+      if (clientChanged) {
+        onClientChange();
+        return;
+      }
+
+      // If not, this is the network name.
+      if (arg.trim() !== "") {
+        network.value = arg;
+        onNetworkChanged();
+      }
+    });
+  });
+  $(window).hashchange();  
+});
+</script>
+</body>
+</html>
+<!--
+vim:ts=2:sw=2:et
+-->
