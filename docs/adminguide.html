@@ -975,7 +975,9 @@ ExecStart=/usr/bin/docker run \
     -peer_addr=dock0.robustirc.net:60667
 
 [Install]
-WantedBy=multi-user.target</pre>
+WantedBy=multi-user.target
+# So that a stop/start of docker will also start RobustIRC again.
+WantedBy=docker.service</pre>
 </div>
 </div>
 </div>
@@ -1271,7 +1273,7 @@ the time of a typical outage, e.g. 5 minutes.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-03-11 22:16:35 CET
+Last updated 2015-05-10 19:11:54 CEST
 </div>
 </div>
 </body>

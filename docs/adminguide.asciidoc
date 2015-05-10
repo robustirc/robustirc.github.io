@@ -399,6 +399,8 @@ ExecStart=/usr/bin/docker run \
 
 [Install]
 WantedBy=multi-user.target
+# So that a stop/start of docker will also start RobustIRC again.
+WantedBy=docker.service
 --------------------------------------------------------------------------------
 
 ==== From source ====
