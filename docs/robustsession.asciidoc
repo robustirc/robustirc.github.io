@@ -160,7 +160,7 @@ https://tools.ietf.org/html/rfc2812[RFC2812], e.g. `TOPIC #robustirc :hey`.
 `$ircmessage` must be encoded in valid UTF-8. Messages which are not valid
 UTF-8 will be refused and an error will be returned.
 
-`$clientid` is an integer identifier created by the client. It SHOULD be chosen
+`$clientid` is an uint64 identifier created by the client. It SHOULD be chosen
 randomly, being different across multiple instances of the client, e.g. by
 using a random value + the hash of the message. Clients MUST not send multiple
 requests in parallel, but wait for the reply after each request. If the reply
