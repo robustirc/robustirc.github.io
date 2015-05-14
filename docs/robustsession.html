@@ -682,7 +682,8 @@ randomly, being different across multiple instances of the client, e.g. by
 using a random value + the hash of the message. Clients MUST not send multiple
 requests in parallel, but wait for the reply after each request. If the reply
 is an error (either a network failure or an HTTP 5xx error code), the client
-SHOULD resend the request to a different server, with unchanged <code>$clientid</code>.</p>
+SHOULD resend the request to a different server, with unchanged <code>$clientid</code>.
+<code>$clientid</code> MUST be different between two subsequent messages.</p>
 </div>
 <div class="paragraph">
 <p>When the server receives a message with the same <code>$clientid</code> as the last
@@ -777,7 +778,7 @@ Reply field, respectively.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-03-11 23:05:37 CET
+Last updated 2015-05-14 13:57:00 CEST
 </div>
 </div>
 </body>

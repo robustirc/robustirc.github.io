@@ -166,6 +166,7 @@ using a random value + the hash of the message. Clients MUST not send multiple
 requests in parallel, but wait for the reply after each request. If the reply
 is an error (either a network failure or an HTTP 5xx error code), the client
 SHOULD resend the request to a different server, with unchanged `$clientid`.
+`$clientid` MUST be different between two subsequent messages.
 
 When the server receives a message with the same `$clientid` as the last
 committed message (e.g. when the client retried because the connection broke
