@@ -16,6 +16,36 @@ version corresponds to a git tag and is available as a docker container with
 the corresponding tag.
 </p>
 
+<h3>RobustIRC v0.2 (2015-05-22)</h3>
+
+<p>
+<i class="fa fa-github"></i> <a href="https://github.com/robustirc/robustirc/releases/tag/v0.2">GitHub tag</a>
+<i class="fa fa-docker"></i> <a href="https://registry.hub.docker.com/u/robustirc/robustirc/">Docker container</a>
+</p>
+
+<p>
+RobustIRC v0.2 contains the following changes:
+</p>
+
+<ul>
+<li>(a number of small bugfixes, see git changelog)</li>
+<li>Important bugfixes for <a href="https://github.com/robustirc/robustirc/issues/100">issue #100 (deadlock)</a></li>
+<li>Important bugfixes for <a href="https://github.com/robustirc/robustirc/issues/115">issue #115 (timeout handling)</a></li>
+<li>GetMessages will be aborted when nodes are partitioned, minimizing network unavailability</li>
+<li>GetMessages resuming was fixed for messages with more than one reply</li>
+<li>PostMessage limit was increased to cope with pathological cases with regards to JSON encoding</li>
+<li>Compaction was made significantly faster (O(hours) → O(minutes))</li>
+<li>IRC message routing was refactored, the previous approach did not work for all messages</li>
+<li>SVSJOIN, SVSPART and SVSHOLD were implemented for NickServ’s AJOIN and RECOVER commands</li>
+<li>KNOCK and NAMES were implemented</li>
+</ul>
+
+<p>
+The known weakness of v0.1 with regards to compaction not covering all message
+types yet is still not entirely addressed (but slightly better already).
+</p>
+
+
 <h3>RobustIRC v0.1 (2015-03-12)</h3>
 
 <p>
