@@ -473,9 +473,17 @@ document for completeness.
 
 === Monitoring ===
 
-TODO
+If you want to provide a stable network, you should strive to keep all nodes of the network healthy. In technical terms, you want to keep your capacity at least at n+1, where n is the number of nodes you absolutely need. In an example with 3 nodes, while the network still functions with only 2 nodes being healthy, it is advisable to always try to have 3 nodes healthy, otherwise a single hardware failure will make your network freeze.
 
-//TODO(secure): publish a prometheus configuration
+In order to detect unhealthy nodes, we recommend using http://prometheus.io/[Prometheus]. Please refer to the Prometheus documentation for details.
+
+RobustIRC exports Prometheus metrics by default and we provide example config files:
+
+* https://github.com/robustirc/robustirc/blob/master/contrib/prometheus/prometheus.conf[contrib/prometheus/prometheus.conf] is an example Prometheus configuration file.
+* https://github.com/robustirc/robustirc/blob/master/contrib/prometheus/robustirc_prometheus.rules[contrib/prometheus/robustirc_prometheus.rules] is an example Prometheus rules file.
+* https://github.com/robustirc/robustirc/blob/master/contrib/prometheus/alertmanager.conf[contrib/prometheus/alertmanager.conf] is an example alertmanager configuration file.
+
+For the robustirc.net network, we use Prometheus in combination with http://pushover.net[Pushover] to get alerted about problems and we try to fix them swiftly.
 
 == Network configuration ==
 

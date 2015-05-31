@@ -1066,7 +1066,29 @@ document for completeness.</p>
 <div class="sect2">
 <h3 id="_monitoring">5.7. Monitoring</h3>
 <div class="paragraph">
-<p>TODO</p>
+<p>If you want to provide a stable network, you should strive to keep all nodes of the network healthy. In technical terms, you want to keep your capacity at least at n+1, where n is the number of nodes you absolutely need. In an example with 3 nodes, while the network still functions with only 2 nodes being healthy, it is advisable to always try to have 3 nodes healthy, otherwise a single hardware failure will make your network freeze.</p>
+</div>
+<div class="paragraph">
+<p>In order to detect unhealthy nodes, we recommend using <a href="http://prometheus.io/">Prometheus</a>. Please refer to the Prometheus documentation for details.</p>
+</div>
+<div class="paragraph">
+<p>RobustIRC exports Prometheus metrics by default and we provide example config files:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p><a href="https://github.com/robustirc/robustirc/blob/master/contrib/prometheus/prometheus.conf">contrib/prometheus/prometheus.conf</a> is an example Prometheus configuration file.</p>
+</li>
+<li>
+<p><a href="https://github.com/robustirc/robustirc/blob/master/contrib/prometheus/robustirc_prometheus.rules">contrib/prometheus/robustirc_prometheus.rules</a> is an example Prometheus rules file.</p>
+</li>
+<li>
+<p><a href="https://github.com/robustirc/robustirc/blob/master/contrib/prometheus/alertmanager.conf">contrib/prometheus/alertmanager.conf</a> is an example alertmanager configuration file.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>For the robustirc.net network, we use Prometheus in combination with <a href="http://pushover.net">Pushover</a> to get alerted about problems and we try to fix them swiftly.</p>
 </div>
 </div>
 </div>
@@ -1273,7 +1295,7 @@ the time of a typical outage, e.g. 5 minutes.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-05-10 19:11:54 CEST
+Last updated 2015-05-31 20:56:17 CEST
 </div>
 </div>
 </body>
