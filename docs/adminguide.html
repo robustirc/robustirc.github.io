@@ -455,7 +455,7 @@ MathJax.Hub.Config({
 <li><a href="#status_page">5.3. Status page</a></li>
 <li><a href="#_bootstrapping">5.4. Bootstrapping</a></li>
 <li><a href="#_installing_running">5.5. Installing &amp; Running</a></li>
-<li><a href="#_updates">5.6. Updates</a></li>
+<li><a href="#updates">5.6. Updates</a></li>
 <li><a href="#_monitoring">5.7. Monitoring</a></li>
 </ul>
 </li>
@@ -915,9 +915,10 @@ display a node state of either “Follower” or “Leader” (as opposed to
 </div>
 <div class="paragraph">
 <p>Once bootstrapping is finished, <strong>be sure to remove the <code>-singlenode</code> and <code>-join</code>
-flags</strong>! Neglecting to remove them could lead to data loss or split brain
-scenarios (for <code>-singlenode</code>) or unavailability after the list of peers changes
-(for <code>-join</code>).</p>
+flags</strong>! Afterwards, use <code>robustirc-rollingrestart</code> to restart each node once,
+see <a href="#updates">Updates</a>. Neglecting to remove the flags could lead to data loss or
+split brain scenarios (for <code>-singlenode</code>) or unavailability after the list of
+peers changes (for <code>-join</code>).</p>
 </div>
 <div class="paragraph">
 <p>Again, <strong>NEVER use the <code>-singlenode</code> flag after the initial bootstrapping</strong>.</p>
@@ -1002,7 +1003,7 @@ $ go get github.com/robustirc/robustirc/...</pre>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_updates">5.6. Updates</h3>
+<h3 id="updates">5.6. Updates</h3>
 <div class="paragraph">
 <p>The <a href="#docker">Docker</a> container we provide always has a “stable” tag pointing at the
 most recently released version that was tested for at least 7 days on the
@@ -1299,7 +1300,7 @@ the time of a typical outage, e.g. 5 minutes.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-05-31 20:59:54 CEST
+Last updated 2015-05-31 21:16:46 CEST
 </div>
 </div>
 </body>
