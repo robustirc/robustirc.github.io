@@ -915,11 +915,11 @@ display a node state of either “Follower” or “Leader” (as opposed to
 </div>
 <div class="paragraph">
 <p>Once bootstrapping is finished, <strong>be sure to remove the <code>-singlenode</code> and <code>-join</code>
-flags</strong>! Afterwards, use <code>robustirc-rollingrestart</code> to restart each node once,
-see <a href="#updates">Updates</a>. Remember to use <code>systemctl daemon-reload</code> to make changes to
-service files effective if you’re using systemd. Neglecting to remove the flags
-could lead to data loss or split brain scenarios (for <code>-singlenode</code>) or
-unavailability after the list of peers changes (for <code>-join</code>).</p>
+flags</strong>! Afterwards, see <a href="#updates">Updates</a> for how to use <code>robustirc-rollingrestart</code>
+to restart each node once. Remember to use <code>systemctl daemon-reload</code> to make
+changes to service files effective if you’re using systemd. Neglecting to
+remove the flags could lead to data loss or split brain scenarios (for
+<code>-singlenode</code>) or unavailability after the list of peers changes (for <code>-join</code>).</p>
 </div>
 <div class="paragraph">
 <p>Again, <strong>NEVER use the <code>-singlenode</code> flag after the initial bootstrapping</strong>.</p>

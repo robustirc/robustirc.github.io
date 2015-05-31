@@ -344,11 +344,11 @@ display a node state of either “Follower” or “Leader” (as opposed to
 “Candidate” or “<nil>”).
 
 Once bootstrapping is finished, *be sure to remove the `-singlenode` and `-join`
-flags*! Afterwards, use `robustirc-rollingrestart` to restart each node once,
-see <<updates>>. Remember to use `systemctl daemon-reload` to make changes to
-service files effective if you’re using systemd. Neglecting to remove the flags
-could lead to data loss or split brain scenarios (for `-singlenode`) or
-unavailability after the list of peers changes (for `-join`).
+flags*! Afterwards, see <<updates>> for how to use `robustirc-rollingrestart`
+to restart each node once. Remember to use `systemctl daemon-reload` to make
+changes to service files effective if you’re using systemd. Neglecting to
+remove the flags could lead to data loss or split brain scenarios (for
+`-singlenode`) or unavailability after the list of peers changes (for `-join`).
 
 Again, *NEVER use the `-singlenode` flag after the initial bootstrapping*.
 
