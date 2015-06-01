@@ -332,6 +332,7 @@ for the status page is https://robustirc:topsecret@alp.robustirc.net:60667/
 The same port is used for the status page, communication between the nodes and
 communication with the clients.
 
+[[bootstrapping]]
 === Bootstrapping ===
 
 When bringing up your network for the first time, you need to run each node
@@ -476,6 +477,63 @@ so it doesn’t modify any state.
 
 We expect canary mode to only be used by developers, but include it in this
 document for completeness.
+
+[[addingnodes]]
+=== Adding nodes ===
+
+To add a new node to the network, for example in preparation of decomissioning
+a server, start it with specifying the `-peer_addr` value of any healthy server
+in the `-join` flag.
+
+As an example, if your network consists of these three healthy nodes:
+
+1. a node running with `-peer_addr=alp.robustirc.net:60667`
+2. a node running with `-peer_addr=dock0.robustirc.net:60667`
+3. a node running with `-peer_addr=ridcully.robustirc.net:60667`
+
+…and you wanted to introduce a node running with
+`-peer_addr=libri.robustirc.net:60667`, you can start that node with
+`-join=alp.robustirc.net:60667`.
+
+As explained in <<bootstrapping>>, *only specify `-join` once, then remove the
+flag again*!
+
+[[removingnodes]]
+=== Removing nodes ===
+
+To remove an existing node from the network, for example before decomissioning
+a server, use the `robustirc-removepeer` tool, e.g.:
+
+--------------------------------------------------------------------------------
+robustirc-removepeer \
+    -network=robustirc.net \
+    -network_password=secret \
+    -remove_peer=alp.robustirc.net:60667
+--------------------------------------------------------------------------------
+
+The `robustirc-removepeer` tool has safety checks in place to make sure that
+the network can still reach quorum after removing the node you ask it to
+remove.
+
+=== Healing partitions ===
+
+In case your network becomes partitioned, you have two options:
+
+1. You do nothing and just wait until the partition is over. This strategy is
+typically only suitable for partition root causes which are well understood and
+short-lived in their nature, e.g. planned maintenance on a network switch.
+2. You first remove the node(s) affected by the partition from the network and
+then replace them with healthy nodes. See <<removingnodes>> and
+<<addingnodes>>, respectively.
+
+Note that it is only safe to remove and add nodes as long as the network still
+has a raft leader, i.e. as long as the majority of nodes are healthy. The
+`robustirc-removepeer` tool described in section <<removingnodes>>
+automatically checks that for you.
+
+In particular, *DO NOT USE the `-singlenode` and `-join` flags* to introduce
+new nodes to the network, or you might end up in a
+http://en.wikipedia.org/wiki/Split-brain_%28computing%29[split-brain scenario].
 
 === Monitoring ===
 

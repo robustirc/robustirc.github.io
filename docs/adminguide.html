@@ -453,10 +453,13 @@ MathJax.Hub.Config({
 <li><a href="#_number_and_location">5.1. Number and Location</a></li>
 <li><a href="#_preparation">5.2. Preparation</a></li>
 <li><a href="#status_page">5.3. Status page</a></li>
-<li><a href="#_bootstrapping">5.4. Bootstrapping</a></li>
+<li><a href="#bootstrapping">5.4. Bootstrapping</a></li>
 <li><a href="#_installing_running">5.5. Installing &amp; Running</a></li>
 <li><a href="#updates">5.6. Updates</a></li>
-<li><a href="#_monitoring">5.7. Monitoring</a></li>
+<li><a href="#addingnodes">5.7. Adding nodes</a></li>
+<li><a href="#removingnodes">5.8. Removing nodes</a></li>
+<li><a href="#_healing_partitions">5.9. Healing partitions</a></li>
+<li><a href="#_monitoring">5.10. Monitoring</a></li>
 </ul>
 </li>
 <li><a href="#_network_configuration">6. Network configuration</a>
@@ -901,7 +904,7 @@ communication with the clients.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_bootstrapping">5.4. Bootstrapping</h3>
+<h3 id="bootstrapping">5.4. Bootstrapping</h3>
 <div class="paragraph">
 <p>When bringing up your network for the first time, you need to run each node
 with a special command line parameter: the first node you start needs the
@@ -1070,7 +1073,91 @@ document for completeness.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_monitoring">5.7. Monitoring</h3>
+<h3 id="addingnodes">5.7. Adding nodes</h3>
+<div class="paragraph">
+<p>To add a new node to the network, for example in preparation of decomissioning
+a server, start it with specifying the <code>-peer_addr</code> value of any healthy server
+in the <code>-join</code> flag.</p>
+</div>
+<div class="paragraph">
+<p>As an example, if your network consists of these three healthy nodes:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>a node running with <code>-peer_addr=alp.robustirc.net:60667</code></p>
+</li>
+<li>
+<p>a node running with <code>-peer_addr=dock0.robustirc.net:60667</code></p>
+</li>
+<li>
+<p>a node running with <code>-peer_addr=ridcully.robustirc.net:60667</code></p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>…and you wanted to introduce a node running with
+<code>-peer_addr=libri.robustirc.net:60667</code>, you can start that node with
+<code>-join=alp.robustirc.net:60667</code>.</p>
+</div>
+<div class="paragraph">
+<p>As explained in <a href="#bootstrapping">Bootstrapping</a>, <strong>only specify <code>-join</code> once, then remove the
+flag again</strong>!</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="removingnodes">5.8. Removing nodes</h3>
+<div class="paragraph">
+<p>To remove an existing node from the network, for example before decomissioning
+a server, use the <code>robustirc-removepeer</code> tool, e.g.:</p>
+</div>
+<div class="listingblock">
+<div class="content">
+<pre>robustirc-removepeer \
+    -network=robustirc.net \
+    -network_password=secret \
+    -remove_peer=alp.robustirc.net:60667</pre>
+</div>
+</div>
+<div class="paragraph">
+<p>The <code>robustirc-removepeer</code> tool has safety checks in place to make sure that
+the network can still reach quorum after removing the node you ask it to
+remove.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_healing_partitions">5.9. Healing partitions</h3>
+<div class="paragraph">
+<p>In case your network becomes partitioned, you have two options:</p>
+</div>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>You do nothing and just wait until the partition is over. This strategy is
+typically only suitable for partition root causes which are well understood and
+short-lived in their nature, e.g. planned maintenance on a network switch.</p>
+</li>
+<li>
+<p>You first remove the node(s) affected by the partition from the network and
+then replace them with healthy nodes. See <a href="#removingnodes">Removing nodes</a> and
+<a href="#addingnodes">Adding nodes</a>, respectively.</p>
+</li>
+</ol>
+</div>
+<div class="paragraph">
+<p>Note that it is only safe to remove and add nodes as long as the network still
+has a raft leader, i.e. as long as the majority of nodes are healthy. The
+<code>robustirc-removepeer</code> tool described in section <a href="#removingnodes">Removing nodes</a>
+automatically checks that for you.</p>
+</div>
+<div class="paragraph">
+<p>In particular, <strong>DO NOT USE the <code>-singlenode</code> and <code>-join</code> flags</strong> to introduce
+new nodes to the network, or you might end up in a
+<a href="http://en.wikipedia.org/wiki/Split-brain_%28computing%29">split-brain scenario</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_monitoring">5.10. Monitoring</h3>
 <div class="paragraph">
 <p>If you want to provide a stable network, you should strive to keep all nodes of the network healthy. In technical terms, you want to keep your capacity at least at n+1, where n is the number of nodes you absolutely need. In an example with 3 nodes, while the network still functions with only 2 nodes being healthy, it is advisable to always try to have 3 nodes healthy, otherwise a single hardware failure will make your network freeze.</p>
 </div>
@@ -1301,7 +1388,7 @@ the time of a typical outage, e.g. 5 minutes.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2015-05-31 21:16:46 CEST
+Last updated 2015-06-01 22:38:37 CEST
 </div>
 </div>
 </body>
