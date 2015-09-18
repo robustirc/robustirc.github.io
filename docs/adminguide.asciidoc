@@ -549,6 +549,8 @@ RobustIRC exports Prometheus metrics by default and we provide example config fi
 
 For the robustirc.net network, we use Prometheus in combination with http://pushover.net[Pushover] to get alerted about problems and we try to fix them swiftly.
 
+As for graphs, we provide an https://github.com/robustirc/robustirc/blob/master/contrib/grafana/robustirc.json[example dashboard JSON file] for http://grafana.org/[Grafana].
+
 == Network configuration ==
 
 Since the network configuration can influence the IRC output messages (e.g.
