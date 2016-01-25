@@ -630,6 +630,7 @@ Password::
 	will not be extended to become that. Only the bare minimum
 	server-to-server protocol was implemented to get services working.
 
+[[raftconfiguration]]
 == Raft Configuration ==
 
 === Timeouts ===
@@ -692,3 +693,16 @@ be higher, as log compactions will occur less frequently.
 
 As a rule of thumb: look at your network’s messages/second, multiply that by
 the time of a typical outage, e.g. 5 minutes.
+
+== Common Issues ==
+
+=== Raft leader flapping ===
+
+If leadership flaps, consult the <<raftconfiguration>> section to verify that
+your timeouts are set appropriate for the network situation at hand.
+
+In case your timeouts are configured correctly, it’s worth checking whether the
+leadership flaps are correlated in time with periods of high CPU or disk
+utilization. In that case, if possible, try increasing the available resources.
+For example, allow the VM in which RobustIRC runs to use a second CPU core in
+case only one was allocated.
