@@ -16,9 +16,43 @@ version corresponds to a git tag and is available as a docker container with
 the corresponding tag.
 </p>
 
-<h3>RobustIRC v0.2 (2015-05-22)</h3>
+<h3>RobustIRC v0.3 (2016-02-20)</h3>
+
+<p class="links">
+<i class="fa fa-github"></i> <a href="https://github.com/robustirc/robustirc/releases/tag/v0.3">GitHub tag</a>
+<i class="fa fa-docker"></i> <a href="https://registry.hub.docker.com/u/robustirc/robustirc/">Docker container</a>
+</p>
 
 <p>
+RobustIRC v0.3 contains the following changes:
+</p>
+
+<ul>
+<li>Two messages of death have been fixed: <a href="https://github.com/robustirc/robustirc/commit/531dbc140a38e84afd0fa282244c0317bbd35772">commit 531dbc1</a> and <a href="https://github.com/robustirc/robustirc/commit/979b014ff1806fcb31dfa3c861793f23c5208dae">commit 979b014</a></li>
+<li>Nodes are prevented from joining the network when their clock drift is too high</li>
+<li><code>robustirc-removepeer</code> (new) safely removes nodes from a network</li>
+<li>Compaction now is much more efficient: completes within 10 seconds, uses &gt;1GB less RAM</li>
+<li>Faster start by recreating the irclog database instead of deleting all entries (5 minutes → 40 seconds)</li>
+<li>Less RAM usage by moving outputstream from RAM to a temporary LevelDB (&gt; 100MB less RAM)</li>
+<li>jepsen now includes a RobustIRC test, successfully verifies network partition handling</li>
+<li>To prevent mistakes, -singlenode and -join are now disabled when the node already has data</li>
+<li>Log files are now kept below 250MB correctly even when running in Docker</li>
+<li>Channel mode +n (no external messages) is now implemented</li>
+<li>Malformed NICK messages (trailer instead of first parameter) are now accepted (for <a href="http://www.quassel-irc.org/">Quassel</a>)</li>
+<li>Capitalization-only nick changes are now supported</li>
+<li><code>robustirc-dump</code> (new) dumps the contents of irclog, raftlog and snapshots</li>
+<li><code>robustirc-canary</code> (new) compares how two versions of RobustIRC process the same input</li>
+<li><code>robustirc-localnet</code> now generates certificates that also work with Chrome ≥ 49.0.2618.8</li>
+</ul>
+
+<p>
+The known weakness of v0.1 and v0.2 with regards to compaction not covering all
+message types yet is still not entirely addressed.
+</p>
+
+<h3>RobustIRC v0.2 (2015-05-22)</h3>
+
+<p class="links">
 <i class="fa fa-github"></i> <a href="https://github.com/robustirc/robustirc/releases/tag/v0.2">GitHub tag</a>
 <i class="fa fa-docker"></i> <a href="https://registry.hub.docker.com/u/robustirc/robustirc/">Docker container</a>
 </p>
@@ -48,7 +82,7 @@ types yet is still not entirely addressed (but slightly better already).
 
 <h3>RobustIRC v0.1 (2015-03-12)</h3>
 
-<p>
+<p class="links">
 <i class="fa fa-github"></i> <a href="https://github.com/robustirc/robustirc/releases/tag/v0.1">GitHub tag</a>
 <i class="fa fa-docker"></i> <a href="https://registry.hub.docker.com/u/robustirc/robustirc/">Docker container</a>
 </p>
