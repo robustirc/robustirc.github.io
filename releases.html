@@ -16,6 +16,33 @@ version corresponds to a git tag and is available as a docker container with
 the corresponding tag.
 </p>
 
+<h3>RobustIRC v0.4 (2016-08-16)</h3>
+
+<p class="links">
+<i class="fa fa-github"></i> <a href="https://github.com/robustirc/robustirc/releases/tag/v0.4">GitHub tag</a>
+<i class="fa fa-docker"></i> <a href="https://registry.hub.docker.com/u/robustirc/robustirc/">Docker container</a>
+</p>
+
+<p>
+RobustIRC v0.4 contains the following changes:
+</p>
+
+<ul>
+<li>Compaction is now replaced by snapshotting. See <a href="https://github.com/robustirc/robustirc/commit/2d3a623d02d40059a100dee58a190d7ed60c4815">commit 2d3a623d02d40059a100dee58a190d7ed60c4815</a> for details. This removes the dependency on SQLite and a bunch of code/SQL statements, finally addressing the issue that RobustIRC instances would grow indefinitely over time.</li>
+<li>contrib: the prometheus monitoring configuration has been updated to be compatible with more recent versions of prometheus.</li>
+<li>compaction_test now works on OS X (previously ran into the NOFILES limit).</li>
+<li>Snapshot restore performance was improved by avoiding to print a message to stderr for each message that is applied. On single-core machines this greatly improves performance by avoiding context switches to Docker which intercepts all messages that go to stderr.</li>
+<li><code>robustirc-localnet</code> now generates a new certificate when the existing certificate will expire soon.</li>
+<li>travis: fix travis configuration (use go1.6, fix go vet invocation)</li>
+</ul>
+
+<p>
+The known weakness of v0.1 to v0.3 with regards to compaction not covering all
+message types yet is finally addressed — compaction now works by snapshotting
+state instead of identifying and deleting obsolete messages.
+</p>
+
+
 <h3>RobustIRC v0.3 (2016-02-20)</h3>
 
 <p class="links">
