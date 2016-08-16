@@ -364,13 +364,17 @@ You can use the official
 https://registry.hub.docker.com/u/robustirc/robustirc/[docker container
 “robustirc/robustirc”] that we provide.
 
-We run one of our servers on CoreOS, which provides quite a restricted
+We run two of our servers on CoreOS, which provides quite a restricted
 environment, so we describe that setup in the hope that you can easily adapt
 it.
 
 In the example systemd service file below, `/media/persistent` is the path on
 which we have mounted our persistent storage. We use it to load the TLS
 key/certificate from and store the RobustIRC state.
+
+Note that the TLS key/certificate need to be readable by uid 99, and
+state needs to be writable by uid 99. The uid corresponds to the `nobody`
+unprivileged user which is used in RobustIRC’s Dockerfile.
 
 Furthermore, the node runs on the public port `60667`, which reminds of the
 conventional `6667` IRC port, but is in the dynamic range. Via `-peer_addr`,
