@@ -16,6 +16,46 @@ version corresponds to a git tag and is available as a docker container with
 the corresponding tag.
 </p>
 
+<h3>RobustIRC v0.5 (2017-03-30)</h3>
+
+<p class="links">
+<i class="fa fa-github"></i> <a href="https://github.com/robustirc/robustirc/releases/tag/v0.5">GitHub tag</a>
+<i class="fa fa-docker"></i> <a href="https://registry.hub.docker.com/u/robustirc/robustirc/">Docker container</a>
+</p>
+
+<p>
+RobustIRC v0.5 contains the following changes:
+</p>
+
+<ul>
+<li>We switched to version 2 of <code>sorcix/irc</code>, which allows us to correctly interpret trailing and non-trailing IRC message parameters. This fixes issues with one-word messages in IRC clients such as Quassel, but might expose bugs in other programs/libraries. See <a href="https://github.com/breunigs/frank/commit/eb5f7dd3afe71ba9c40d3d0606c9af1073055b08">this bugfix in an IRC bot</a>.</li>
+<li>The <code>ISON</code> IRC command has been implemented.</li>
+<li>The <code>PING</code> IRC command is now ignored for idle time in <code>WHOIS</code>.</li>
+<li>The <code>INVITE</code> IRC command is now invalidated on <code>JOIN</code>.</li>
+<li>The <code>WHOIS</code> IRC command now results in <code>RPL_WHOISREGNICK</code> for identified users.</li>
+<li>The <code>TOPIC</code> IRC command now properly checks for operator status in <code>+t</code> channels.</li>
+<li>The user mode <code>+i</code> (invisible) has been implemented, dropping <code>PRIVMSG</code> and <code>NOTICE</code> IRC commands targetting you unless the sender shares a common channel with you.</li>
+<li>The irclog debug handler is now significantly faster (2m17s to 9s) due to using a bulk iterator.</li>
+<li>The configuration revision is now actually applied, protecting against conflicting edits.</li>
+<li>All mutex locks have been audited for correctness and a test has been added.</li>
+<li>TLS certificates/keys are now reloaded upon receiving a <code>SIGHUP</code> signal.</li>
+<li>When creating a channel, its modes now default to <code>+nt</code>.</li>
+<li>RobustIRC bridges can now be marked as trusted, resulting in the forwarded IP address being exposed. See <a href="https://github.com/robustirc/robustirc/issues/122">issue #122</a> for details.</li>
+<li>The IRC channel mode <code>+x</code> has been implemented, requiring the user to solve a captcha before joining the channel.</li>
+<li>The <code>CaptchaRequiredForLogin</code> configuration option has been implemented, requiring users to solve a captcha before logging into the IRC network.</li>
+<li>The <code>MaxSessions</code> and <code>MaxChannels</code> configuration options have been implemented for limiting the maximum amount of memory.</li>
+<li>The GetMessage and session tables on the status pages are now sortable.</li>
+<li>The status pages now feature a quick way to kill sessions. Multiple sessions can be selected by holding the shift key.</li>
+<li>The status pages have been split into multiple subpages.</li>
+<li>At most one GetMessages request is now allowed per session per node.</li>
+</ul>
+
+<p>
+Loadtesting the v0.5 RobustIRC release (with Go 1.8) <a
+href="https://snapshot.raintank.io/dashboard/snapshot/7vCFEkljAkg7CW7sBzXB8OLbPM9FvJx2">showed
+that v0.5 can handle more than 2000 messages/s</a>.
+</p>
+
 <h3>RobustIRC v0.4 (2016-08-16)</h3>
 
 <p class="links">
