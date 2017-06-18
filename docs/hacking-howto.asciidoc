@@ -39,3 +39,38 @@ RobustIRC user is waiting for changes of that array in the GetMessages request,
 which is a never-ending HTTP request that sends out new array entries as HTTP
 chunks. Because not every message needs to be sent to every RobustIRC user,
 they are filtered in `ircserver.Session.InterestedIn`.
+
+== The RobustIRC state ==
+
+RobustIRC state consists of two big parts:
+
+1. The server state, such as who is logged in, who is in which channel, which
+   modes do the channels have, etc.
+
+2. The outputstream messages for the last 10 minutes.
+
+The latter needs to be kept around so that users can continue hanging sessions:
+think a user who suspends their notebook, walks around for 9m, opens the
+notebook and wants to resume the same session in RobustIRC.
+
+The server state — as of all messages before the oldest outputstream message —
+is persisted as-is into a Raft snapshot.
+
+Instead of storing the outputstream in a Raft snapshot, we actually store the
+input messages and replay them on the restored state when restoring from
+snapshots. This can be thought of as a compression schema: instead of saving the
+all the output messages (typically relatively long, for some messages also
+many), we save the 1 input message (typically short).
+
+Since these input messages will only ever be read (sequentially) when restoring
+from snapshots or when taking a new snapshot, it makes sense to quickly spill
+them to disk to conserve main memory: they are stored in the “irclog” LevelDB
+database.
+
+You might wonder how the “raftlog” LevelDB database differs from the “irclog”
+database, as seemingly both store the input messages. This is true, but the
+timescales are different: raft assumes that all messages which were processed
+before taking a snapshot can be deleted because their state changes are
+represented in the snapshot. Hence, messages more recent than 10 minutes might
+already be deleted in the “raftlog” database, when we still might need to serve
+them to users.
