@@ -14,6 +14,43 @@ weight: 3
 Whenever a new version of RobustIRC is released, you can find it here. Each
 version corresponds to a git tag and is available as a docker container with
 the corresponding tag.
+
+<h3>RobustIRC v0.6 (2017-06-26)</h3>
+
+<p class="links">
+<i class="fa fa-github"></i> <a href="https://github.com/robustirc/robustirc/releases/tag/v0.6">GitHub tag</a>
+<i class="fa fa-docker"></i> <a href="https://registry.hub.docker.com/u/robustirc/robustirc/">Docker container</a>
+</p>
+
+<p>
+RobustIRC v0.6 contains the following changes:
+</p>
+
+<ul>
+<li>cleanup: ircserver commands and tests are now split into <code>cmd_*</code> and <code>scmd_*</code> files</li>
+<li>cleanup: packages moved to <code>internal/</code> to clarify they shouldn’t be used outside of RobustIRC</li>
+<li>cleanup: definitions moved from the <code>types</code> package to the more idiomatic <code>robust</code> package</li>
+<li>time-based IDs have been replaced with raft message index. increased peak throughput by 500 messages/s</li>
+<li>remote hosts are now throttled when specifying the wrong <code>-network_password</code></li>
+<li>Mutex locks have been added around ircserver config and sessions</li>
+<li>Channel bans have been implemented</li>
+<li>The <code>GLINE</code> IRC command has been implemented.</li>
+<li>The RemoteAddr is now exposed in /status/sessions</li>
+<li>A <a href="https://robustirc.net/docs/userguide.html">userguide</a> was added</li>
+<li>Cross-origin resource sharing (CORS) headers are now set for every request</li>
+<li>protobuf encoding for Raft messages, store values and snapshots (<code>--pre1.0_protobuf</code> flag)</li>
+<li><code>config.SessionExpiration</code> worth of messages are now kept, not 1 week</li>
+</ul>
+
+<p>
+Startup times are now down to a fraction of a second (from minutes), making
+network upgrades faster and restarts less risky to freeze your network.
+</p>
+
+<p>
+Loadtesting the v0.6 RobustIRC release (with Go 1.9beta1) <a
+href="https://snapshot.raintank.io/dashboard/snapshot/oatS8D88ml8CF07JT0k33W61t71yMcXU?orgId=2">showed
+that v0.6 can handle more than 2500 messages/s</a>.
 </p>
 
 <h3>RobustIRC v0.5 (2017-03-30)</h3>
