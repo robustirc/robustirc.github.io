@@ -15,6 +15,34 @@ Whenever a new version of RobustIRC is released, you can find it here. Each
 version corresponds to a git tag and is available as a docker container with
 the corresponding tag.
 
+<h3>RobustIRC v0.7 (2020-07-31)</h3>
+
+<p class="links">
+<i class="fab fa-github"></i> <a href="https://github.com/robustirc/robustirc/releases/tag/v0.7">GitHub tag</a>
+<i class="fab fa-docker"></i> <a href="https://registry.hub.docker.com/u/robustirc/robustirc/">Docker container</a>
+</p>
+
+<p>
+RobustIRC v0.7 contains the following changes:
+</p>
+
+<ul>
+  <li>Move to latest hashicorp/raft v1.1.2</li>
+  <li>localnet: add -shell for easy process termination/restarting</li>
+  <li>api: /messages: <a href="https://github.com/robustirc/robustirc/issues/163">fail early when partitioned, acknowledge request immediately</a></li>
+  <li>remove osext dependency now that go1.8 is in Debian stable-backports</li>
+  <li>postmessage: ensure messages do not contain \n</li>
+  <li>add <a href="https://github.com/robustirc/internal/commit/7c28db6">flakyhttp mechanism for fault injection</a></li>
+  <li>prometheus: bump hold time of often-spurious LeaderFlapping alert</li>
+  <li>Fix accidental 404 when GetMessages is aborted (Thanks sur5r)</li>
+</ul>
+
+<p>
+Loadtesting the v0.7 RobustIRC release (with Go 1.14) <a
+href="https://snapshot.raintank.io/dashboard/snapshot/Cvdm1l1zH9ZJrTNv3EZfhvpkTTskRBy8?orgId=2">showed
+that v0.7 can handle about 3000 messages/s</a>.
+</p>
+
 <h3>RobustIRC v0.6 (2017-06-26)</h3>
 
 <p class="links">
