@@ -519,6 +519,20 @@ The `robustirc-removepeer` tool has safety checks in place to make sure that
 the network can still reach quorum after removing the node you ask it to
 remove.
 
+=== Upgrading to the Raft protocol version 3 ===
+
+Since RobustIRC was released, the `hashicorp/raft` package which RobustIRC is
+using has introduced a new protocol version.
+
+To upgrade your network from Raft protocol version 1 (the default) to version 3
+(the new version), use the following steps:
+
+1. Ensure the RobustIRC binary is recent enough: on the status page, it should
+   list “protocol_version” in the “Raft Stats” column.
+2. Take down one node. Bring it back up again with the
+   `-raft_protocol_version=2` flag. Repeat until all nodes are on version 2.
+3. Repeat step 1 with `-raft_protocol_version=3`.
+
 === Healing partitions ===
 
 In case your network becomes partitioned, you have two options:
