@@ -1,0 +1,394 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RobustIRC releases</title>
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+<link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.1/css/fontawesome.css">
+<link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.1/css/brands.css">
+<link href="jumbotron-narrow.css" rel="stylesheet">
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400">
+<style type="text/css">
+body {
+  font-family: "Open Sans";
+}
+
+.docs {
+  margin-bottom: 2em;
+}
+
+.docs li {
+  margin-top: 2em;
+}
+
+.contact li {
+  margin-top: 1em;
+}
+
+.releases .links a {
+  margin-right: 1em;
+}
+</style>
+</head>
+<body>
+    <div class="container">
+      <div class="header">
+        <nav>
+          <ul class="nav nav-pills pull-right">
+
+            
+              <li role="presentation" ><a href="/assets/css/style.css"></a></li>
+            
+              <li role="presentation" ><a href="/">Home</a></li>
+            
+              <li role="presentation"><a href="/docs/">Docs</a></li>
+            
+              <li role="presentation" ><a href="/releases/">Releases</a></li>
+            
+              <li role="presentation" ><a href="/contact/">Contact</a></li>
+          </ul>
+        </nav>
+        <h3 class="text-muted">RobustIRC</h3>
+      </div>
+
+
+<div class="row">
+<div class="col-lg-12 releases">
+<h2>Releases</h2>
+
+<div style="margin-top: 2em; margin-bottom: 2em">
+<p>
+Whenever a new version of RobustIRC is released, you can find it here. Each
+version corresponds to a git tag and is available as a docker container with
+the corresponding tag.
+
+<h3>RobustIRC v0.7 (2020-07-31)</h3>
+
+<p class="links">
+<i class="fab fa-github"></i> <a href="https://github.com/robustirc/robustirc/releases/tag/v0.7">GitHub tag</a>
+<i class="fab fa-docker"></i> <a href="https://hub.docker.com/r/robustirc/robustirc">Docker container</a>
+</p>
+
+<p>
+RobustIRC v0.7 contains the following changes:
+</p>
+
+<ul>
+  <li>Move to latest hashicorp/raft v1.1.2</li>
+  <li>localnet: add -shell for easy process termination/restarting</li>
+  <li>api: /messages: <a href="https://github.com/robustirc/robustirc/issues/163">fail early when partitioned, acknowledge request immediately</a></li>
+  <li>remove osext dependency now that go1.8 is in Debian stable-backports</li>
+  <li>postmessage: ensure messages do not contain \n</li>
+  <li>add <a href="https://github.com/robustirc/internal/commit/7c28db6">flakyhttp mechanism for fault injection</a></li>
+  <li>prometheus: bump hold time of often-spurious LeaderFlapping alert</li>
+  <li>Fix accidental 404 when GetMessages is aborted (Thanks sur5r)</li>
+</ul>
+
+<p>
+Loadtesting the v0.7 RobustIRC release (with Go 1.14) <a
+href="https://snapshot.raintank.io/dashboard/snapshot/Cvdm1l1zH9ZJrTNv3EZfhvpkTTskRBy8?orgId=2">showed
+that v0.7 can handle about 3000 messages/s</a>.
+</p>
+
+<h3>RobustIRC v0.6 (2017-06-26)</h3>
+
+<p class="links">
+<i class="fab fa-github"></i> <a href="https://github.com/robustirc/robustirc/releases/tag/v0.6">GitHub tag</a>
+<i class="fab fa-docker"></i> <a href="https://hub.docker.com/r/robustirc/robustirc">Docker container</a>
+</p>
+
+<p>
+RobustIRC v0.6 contains the following changes:
+</p>
+
+<ul>
+<li>cleanup: ircserver commands and tests are now split into <code>cmd_*</code> and <code>scmd_*</code> files</li>
+<li>cleanup: packages moved to <code>internal/</code> to clarify they shouldn’t be used outside of RobustIRC</li>
+<li>cleanup: definitions moved from the <code>types</code> package to the more idiomatic <code>robust</code> package</li>
+<li>time-based IDs have been replaced with raft message index. increased peak throughput by 500 messages/s</li>
+<li>remote hosts are now throttled when specifying the wrong <code>-network_password</code></li>
+<li>Mutex locks have been added around ircserver config and sessions</li>
+<li>Channel bans have been implemented</li>
+<li>The <code>GLINE</code> IRC command has been implemented.</li>
+<li>The RemoteAddr is now exposed in /status/sessions</li>
+<li>A <a href="https://robustirc.net/docs/userguide.html">userguide</a> was added</li>
+<li>Cross-origin resource sharing (CORS) headers are now set for every request</li>
+<li>protobuf encoding for Raft messages, store values and snapshots (<code>--pre1.0_protobuf</code> flag)</li>
+<li><code>config.SessionExpiration</code> worth of messages are now kept, not 1 week</li>
+</ul>
+
+<p>
+Startup times are now down to a fraction of a second (from minutes), making
+network upgrades faster and restarts less risky to freeze your network.
+</p>
+
+<p>
+Loadtesting the v0.6 RobustIRC release (with Go 1.9beta1) <a
+href="https://snapshot.raintank.io/dashboard/snapshot/oatS8D88ml8CF07JT0k33W61t71yMcXU?orgId=2">showed
+that v0.6 can handle more than 2500 messages/s</a>.
+</p>
+
+<h3>RobustIRC v0.5 (2017-03-30)</h3>
+
+<p class="links">
+<i class="fab fa-github"></i> <a href="https://github.com/robustirc/robustirc/releases/tag/v0.5">GitHub tag</a>
+<i class="fab fa-docker"></i> <a href="https://hub.docker.com/r/robustirc/robustirc">Docker container</a>
+</p>
+
+<p>
+RobustIRC v0.5 contains the following changes:
+</p>
+
+<ul>
+<li>We switched to version 2 of <code>sorcix/irc</code>, which allows us to correctly interpret trailing and non-trailing IRC message parameters. This fixes issues with one-word messages in IRC clients such as Quassel, but might expose bugs in other programs/libraries. See <a href="https://github.com/breunigs/frank/commit/eb5f7dd3afe71ba9c40d3d0606c9af1073055b08">this bugfix in an IRC bot</a>.</li>
+<li>The <code>ISON</code> IRC command has been implemented.</li>
+<li>The <code>PING</code> IRC command is now ignored for idle time in <code>WHOIS</code>.</li>
+<li>The <code>INVITE</code> IRC command is now invalidated on <code>JOIN</code>.</li>
+<li>The <code>WHOIS</code> IRC command now results in <code>RPL_WHOISREGNICK</code> for identified users.</li>
+<li>The <code>TOPIC</code> IRC command now properly checks for operator status in <code>+t</code> channels.</li>
+<li>The user mode <code>+i</code> (invisible) has been implemented, dropping <code>PRIVMSG</code> and <code>NOTICE</code> IRC commands targetting you unless the sender shares a common channel with you.</li>
+<li>The irclog debug handler is now significantly faster (2m17s to 9s) due to using a bulk iterator.</li>
+<li>The configuration revision is now actually applied, protecting against conflicting edits.</li>
+<li>All mutex locks have been audited for correctness and a test has been added.</li>
+<li>TLS certificates/keys are now reloaded upon receiving a <code>SIGHUP</code> signal.</li>
+<li>When creating a channel, its modes now default to <code>+nt</code>.</li>
+<li>RobustIRC bridges can now be marked as trusted, resulting in the forwarded IP address being exposed. See <a href="https://github.com/robustirc/robustirc/issues/122">issue #122</a> for details.</li>
+<li>The IRC channel mode <code>+x</code> has been implemented, requiring the user to solve a captcha before joining the channel.</li>
+<li>The <code>CaptchaRequiredForLogin</code> configuration option has been implemented, requiring users to solve a captcha before logging into the IRC network.</li>
+<li>The <code>MaxSessions</code> and <code>MaxChannels</code> configuration options have been implemented for limiting the maximum amount of memory.</li>
+<li>The GetMessage and session tables on the status pages are now sortable.</li>
+<li>The status pages now feature a quick way to kill sessions. Multiple sessions can be selected by holding the shift key.</li>
+<li>The status pages have been split into multiple subpages.</li>
+<li>At most one GetMessages request is now allowed per session per node.</li>
+</ul>
+
+<p>
+Loadtesting the v0.5 RobustIRC release (with Go 1.8) <a
+href="https://snapshot.raintank.io/dashboard/snapshot/7vCFEkljAkg7CW7sBzXB8OLbPM9FvJx2">showed
+that v0.5 can handle more than 2000 messages/s</a>.
+</p>
+
+<h3>RobustIRC v0.4 (2016-08-16)</h3>
+
+<p class="links">
+<i class="fab fa-github"></i> <a href="https://github.com/robustirc/robustirc/releases/tag/v0.4">GitHub tag</a>
+<i class="fab fa-docker"></i> <a href="https://hub.docker.com/r/robustirc/robustirc">Docker container</a>
+</p>
+
+<p>
+RobustIRC v0.4 contains the following changes:
+</p>
+
+<ul>
+<li>Compaction is now replaced by snapshotting. See <a href="https://github.com/robustirc/robustirc/commit/2d3a623d02d40059a100dee58a190d7ed60c4815">commit 2d3a623d02d40059a100dee58a190d7ed60c4815</a> for details. This removes the dependency on SQLite and a bunch of code/SQL statements, finally addressing the issue that RobustIRC instances would grow indefinitely over time.</li>
+<li>contrib: the prometheus monitoring configuration has been updated to be compatible with more recent versions of prometheus.</li>
+<li>compaction_test now works on OS X (previously ran into the NOFILES limit).</li>
+<li>Snapshot restore performance was improved by avoiding to print a message to stderr for each message that is applied. On single-core machines this greatly improves performance by avoiding context switches to Docker which intercepts all messages that go to stderr.</li>
+<li><code>robustirc-localnet</code> now generates a new certificate when the existing certificate will expire soon.</li>
+<li>travis: fix travis configuration (use go1.6, fix go vet invocation)</li>
+</ul>
+
+<p>
+The known weakness of v0.1 to v0.3 with regards to compaction not covering all
+message types yet is finally addressed — compaction now works by snapshotting
+state instead of identifying and deleting obsolete messages.
+</p>
+
+<p>
+Loadtesting the v0.4 RobustIRC release (with Go 1.6) <a
+href="https://github.com/robustirc/robustirc/issues/81">showed that v0.4 can
+handle more than 2000 messages/s</a>.
+</p>
+
+<p>
+Loadtesting the v0.4 RobustIRC release (with Go 1.7) <a
+href="https://snapshot.raintank.io/dashboard/snapshot/xHKh1p4QvRd3TltFFZ5tu9q9GLvdTrcx">showed
+that v0.4 can handle more than 3500 messages/s</a>.
+</p>
+
+<p>
+Loadtesting the v0.4 RobustIRC release (with Go 1.8beta1) <a
+href="https://snapshot.raintank.io/dashboard/snapshot/I6Qg7cu49lBW5zRnOooNDefFBZOhTvOT">showed
+that v0.4 can handle more than 3500 messages/s</a>.
+</p>
+
+<h3>RobustIRC v0.3 (2016-02-20)</h3>
+
+<p class="links">
+<i class="fab fa-github"></i> <a href="https://github.com/robustirc/robustirc/releases/tag/v0.3">GitHub tag</a>
+<i class="fab fa-docker"></i> <a href="https://hub.docker.com/r/robustirc/robustirc">Docker container</a>
+</p>
+
+<p>
+RobustIRC v0.3 contains the following changes:
+</p>
+
+<ul>
+<li>Two messages of death have been fixed: <a href="https://github.com/robustirc/robustirc/commit/531dbc140a38e84afd0fa282244c0317bbd35772">commit 531dbc1</a> and <a href="https://github.com/robustirc/robustirc/commit/979b014ff1806fcb31dfa3c861793f23c5208dae">commit 979b014</a></li>
+<li>Nodes are prevented from joining the network when their clock drift is too high</li>
+<li><code>robustirc-removepeer</code> (new) safely removes nodes from a network</li>
+<li>Compaction now is much more efficient: completes within 10 seconds, uses &gt;1GB less RAM</li>
+<li>Faster start by recreating the irclog database instead of deleting all entries (5 minutes → 40 seconds)</li>
+<li>Less RAM usage by moving outputstream from RAM to a temporary LevelDB (&gt; 100MB less RAM)</li>
+<li>jepsen now includes a RobustIRC test, successfully verifies network partition handling</li>
+<li>To prevent mistakes, -singlenode and -join are now disabled when the node already has data</li>
+<li>Log files are now kept below 250MB correctly even when running in Docker</li>
+<li>Channel mode +n (no external messages) is now implemented</li>
+<li>Malformed NICK messages (trailer instead of first parameter) are now accepted (for <a href="http://www.quassel-irc.org/">Quassel</a>)</li>
+<li>Capitalization-only nick changes are now supported</li>
+<li><code>robustirc-dump</code> (new) dumps the contents of irclog, raftlog and snapshots</li>
+<li><code>robustirc-canary</code> (new) compares how two versions of RobustIRC process the same input</li>
+<li><code>robustirc-localnet</code> now generates certificates that also work with Chrome ≥ 49.0.2618.8</li>
+</ul>
+
+<p>
+The known weakness of v0.1 and v0.2 with regards to compaction not covering all
+message types yet is still not entirely addressed.
+</p>
+
+<h3>RobustIRC v0.2 (2015-05-22)</h3>
+
+<p class="links">
+<i class="fab fa-github"></i> <a href="https://github.com/robustirc/robustirc/releases/tag/v0.2">GitHub tag</a>
+<i class="fab fa-docker"></i> <a href="https://hub.docker.com/r/robustirc/robustirc">Docker container</a>
+</p>
+
+<p>
+RobustIRC v0.2 contains the following changes:
+</p>
+
+<ul>
+<li>(a number of small bugfixes, see git changelog)</li>
+<li>Important bugfixes for <a href="https://github.com/robustirc/robustirc/issues/100">issue #100 (deadlock)</a></li>
+<li>Important bugfixes for <a href="https://github.com/robustirc/robustirc/issues/115">issue #115 (timeout handling)</a></li>
+<li>GetMessages will be aborted when nodes are partitioned, minimizing network unavailability</li>
+<li>GetMessages resuming was fixed for messages with more than one reply</li>
+<li>PostMessage limit was increased to cope with pathological cases with regards to JSON encoding</li>
+<li>Compaction was made significantly faster (O(hours) → O(minutes))</li>
+<li>IRC message routing was refactored, the previous approach did not work for all messages</li>
+<li>SVSJOIN, SVSPART and SVSHOLD were implemented for NickServ’s AJOIN and RECOVER commands</li>
+<li>KNOCK and NAMES were implemented</li>
+</ul>
+
+<p>
+The known weakness of v0.1 with regards to compaction not covering all message
+types yet is still not entirely addressed (but slightly better already).
+</p>
+
+
+<h3>RobustIRC v0.1 (2015-03-12)</h3>
+
+<p class="links">
+<i class="fab fa-github"></i> <a href="https://github.com/robustirc/robustirc/releases/tag/v0.1">GitHub tag</a>
+<i class="fab fa-docker"></i> <a href="https://hub.docker.com/r/robustirc/robustirc">Docker container</a>
+</p>
+
+<p>
+This is the first public release of RobustIRC. It has been used for a number of
+weeks with (by now) more than 30 users. That said, since it is the first
+release, there are probably a couple of rough edges.
+</p>
+
+<p>
+A known weakness of this version is compaction not being completely implemented
+for all IRC commands: if you let this version of RobustIRC run for too long, it
+will eventually run out of memory/disk. We are talking about many weeks
+here, but it’s important to be aware of it. When using this version, we
+strongly recommend you upgrade to newer versions soon.
+</p>
+
+</div>
+
+</div>
+</div>
+
+
+
+
+      <footer class="footer" style="text-align: center">
+        <p>&copy; 2014 <a href="https://github.com/robustirc/bridge/blob/master/AUTHORS">The RobustIRC Authors</a></p>
+      </footer>
+
+    </div>
+
+
+<script type="text/javascript" src="//code.jquery.com/jquery-2.1.3.min.js"></script>
+<script type="text/javascript" src="jquery.ba-hashchange.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+  var network = $('#network')[0];
+  var currentNetwork = network.value;
+  var client = $('#client')[0];
+  var currentClient = client.value;
+
+  var updateHash = function() {
+    var args = [];
+    if (currentNetwork != 'robustirc.net') {
+      args.push(currentNetwork);
+    }
+    if (currentClient != 'irssi') {
+      args.push(currentClient);
+    }
+    location.hash = '#' + args.join(',');
+  };
+
+  var onNetworkChanged = function() {
+    if (currentNetwork == network.value) {
+      return;
+    }
+
+    currentNetwork = network.value;
+    if (currentNetwork.trim() === '') {
+      currentNetwork = network.placeholder;
+    }
+    $('.network').text(currentNetwork);
+    $('.networkname').text(currentNetwork.replace(/\..*/, ''));
+    updateHash();
+  };
+  $(network).on('change keypress paste input', onNetworkChanged);
+
+  var onClientChange = function() {
+    if (currentClient == client.value) {
+      return;
+    }
+
+    currentClient = client.value;
+    $('.client').text(currentClient);
+    $('#clientinstructions pre').hide();
+    $('#clientinstructions .instructions-'+currentClient).show();
+    updateHash();
+  };
+  $(client).on('change keypress paste input', onClientChange);
+
+  $(window).hashchange(function() {
+    $.each(location.hash.replace(/^#/, '').split(","), function(idx, arg) {
+      
+      var clientChanged = false;
+      $('#client option').each(function(idx, el) {
+        if (el.value == arg) {
+          $(el).attr('selected', 'selected');
+          clientChanged = true;
+          return false;
+        }
+      });
+      if (clientChanged) {
+        onClientChange();
+        return;
+      }
+
+      
+      if (arg.trim() !== "") {
+        network.value = arg;
+        onNetworkChanged();
+      }
+    });
+  });
+  $(window).hashchange();  
+});
+</script>
+</body>
+</html>
+
+

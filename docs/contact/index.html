@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RobustIRC contact</title>
+<link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+<link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.1/css/fontawesome.css">
+<link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.1/css/brands.css">
+<link href="jumbotron-narrow.css" rel="stylesheet">
+<link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400">
+<style type="text/css">
+body {
+  font-family: "Open Sans";
+}
+
+.docs {
+  margin-bottom: 2em;
+}
+
+.docs li {
+  margin-top: 2em;
+}
+
+.contact li {
+  margin-top: 1em;
+}
+
+.releases .links a {
+  margin-right: 1em;
+}
+</style>
+</head>
+<body>
+    <div class="container">
+      <div class="header">
+        <nav>
+          <ul class="nav nav-pills pull-right">
+
+            
+              <li role="presentation" ><a href="/assets/css/style.css"></a></li>
+            
+              <li role="presentation" ><a href="/">Home</a></li>
+            
+              <li role="presentation"><a href="/docs/">Docs</a></li>
+            
+              <li role="presentation" ><a href="/releases/">Releases</a></li>
+            
+              <li role="presentation" ><a href="/contact/">Contact</a></li>
+          </ul>
+        </nav>
+        <h3 class="text-muted">RobustIRC</h3>
+      </div>
+
+
+<div class="row">
+<div class="col-lg-12 contact">
+<h2>Contact</h2>
+
+<div style="margin-top: 2em; margin-bottom: 2em">
+<p>
+We hang out in <code>#robustirc</code> on RobustIRC (<a href="/">instructions for connecting to RobustIRC</a>).
+</p>
+
+<p>
+In addition, there are also two email mailing lists:
+<ol>
+<li>
+<a
+href="https://groups.google.com/forum/#!forum/robustirc-announce">robustirc-announce</a>,
+where announcements about the project in general and about new releases in
+particular will be posted. Expected traffic is on average 1 email per week
+tops.<br>
+If you are running a RobustIRC network, you should be subscribed to this list.
+</li>
+<li>
+<a
+href="https://groups.google.com/forum/#!forum/robustirc-discuss">robustirc-discuss</a>,
+where anyone can start discussions about RobustIRC.
+</li>
+</ol>
+</div>
+
+</div>
+</div>
+
+
+
+
+      <footer class="footer" style="text-align: center">
+        <p>&copy; 2014 <a href="https://github.com/robustirc/bridge/blob/master/AUTHORS">The RobustIRC Authors</a></p>
+      </footer>
+
+    </div>
+
+
+<script type="text/javascript" src="//code.jquery.com/jquery-2.1.3.min.js"></script>
+<script type="text/javascript" src="jquery.ba-hashchange.min.js"></script>
+<script type="text/javascript">
+$(document).ready(function() {
+  var network = $('#network')[0];
+  var currentNetwork = network.value;
+  var client = $('#client')[0];
+  var currentClient = client.value;
+
+  var updateHash = function() {
+    var args = [];
+    if (currentNetwork != 'robustirc.net') {
+      args.push(currentNetwork);
+    }
+    if (currentClient != 'irssi') {
+      args.push(currentClient);
+    }
+    location.hash = '#' + args.join(',');
+  };
+
+  var onNetworkChanged = function() {
+    if (currentNetwork == network.value) {
+      return;
+    }
+
+    currentNetwork = network.value;
+    if (currentNetwork.trim() === '') {
+      currentNetwork = network.placeholder;
+    }
+    $('.network').text(currentNetwork);
+    $('.networkname').text(currentNetwork.replace(/\..*/, ''));
+    updateHash();
+  };
+  $(network).on('change keypress paste input', onNetworkChanged);
+
+  var onClientChange = function() {
+    if (currentClient == client.value) {
+      return;
+    }
+
+    currentClient = client.value;
+    $('.client').text(currentClient);
+    $('#clientinstructions pre').hide();
+    $('#clientinstructions .instructions-'+currentClient).show();
+    updateHash();
+  };
+  $(client).on('change keypress paste input', onClientChange);
+
+  $(window).hashchange(function() {
+    $.each(location.hash.replace(/^#/, '').split(","), function(idx, arg) {
+      
+      var clientChanged = false;
+      $('#client option').each(function(idx, el) {
+        if (el.value == arg) {
+          $(el).attr('selected', 'selected');
+          clientChanged = true;
+          return false;
+        }
+      });
+      if (clientChanged) {
+        onClientChange();
+        return;
+      }
+
+      
+      if (arg.trim() !== "") {
+        network.value = arg;
+        onNetworkChanged();
+      }
+    });
+  });
+  $(window).hashchange();  
+});
+</script>
+</body>
+</html>
+
+

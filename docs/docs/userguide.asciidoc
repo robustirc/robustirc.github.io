@@ -1,0 +1,66 @@
+= RobustIRC User Guide =
+:numbered:
+:toc: right
+:stem: latexmath
+
+This User’s Guide documents RobustIRC features which are not typically found in
+other IRC servers.
+
+In case you have any questions that this document leaves unanswered, please
+https://github.com/robustirc/robustirc.github.io/issues/new[file an issue on
+GitHub] so that we can answer your question and improve the document.
+
+== Authentication ==
+
+RobustIRC supports authenticating yourself when connecting by supplying an IRC
+server password. Refer to your IRC client documentation for where/how to specify
+such a password.
+
+Multiple passwords can be specified by separating them with colons and prefixing
+them with a destination. E.g.: `nickserv=secret:oper=topsecret` to authenticate
+to NickServ using the password `secret` and to authenticate as an IRC operator
+using the password `topsecret`. If no destination is specified, NickServ is used
+as default destination.
+
+|==========================
+| Prefix      | Purpose
+| `nickserv=` | NickServ password
+| `captcha=`  | RobustIRC captcha (see <<captcha>>)
+| `network=`  | Private network password (not yet implemented)
+| `session=`  | picking up a saved session (not yet implemented)
+| `oper=`     | IRC Operator password
+| `services=` | server-to-server connection (services)
+|==========================
+
+[[captcha]]
+== Captcha support ==
+
+Note that this feature might not be enabled on all RobustIRC networks. You’ll
+receive an error message if you try to use it where it isn’t available, so just
+give it a try.
+
+In case your channel(s) are being abused, you might want to limit joining the
+channel to people who are willing to serve a captcha before joining. To enable
+this behavior, set channel mode `+x`, e.g. using `/mode #test +x`. Users will
+then be denied joining the channel and given a link to a captcha form, which
+will provide a one-time token to join the channel.
+
+Captchas can also be enabled for the entire network, which will prevent people
+from logging in until they supply the captcha form result as a server
+password. Contact your IRC operators to enable this mode temporarily.
+
+== Bans ==
+
+To ban a user from your channel, use your IRC client’s ban command.
+
+Ban masks are matched against the userhost in the format `nick!user@host`,
+e.g. `sECuRE!michael@robust/0x1234`.
+
+Ban masks in RobustIRC may contain the `\*` operator, which matches zero or more
+characters. E.g., `*!michael@*` will match all users whose user is “michael”.
+
+When placing a ban, the RobustSession id in the hostname part of the ban mask
+(e.g. `robust/0x1234`) will match both the RobustSession and the IP address
+which was last used by that RobustSession. I.e., a user will remain banned if
+they change their IP address but remain connected, and if they reconnect without
+changing their IP address.

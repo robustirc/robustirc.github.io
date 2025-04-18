@@ -1,0 +1,235 @@
+= RobustSession protocol =
+:numbered:
+:toc: right
+:stem: latexmath
+
+This protocol documentation is written for people who are interested in
+implementing a RobustIRC client.
+
+In case you have any questions that this document leaves unanswered, please
+https://github.com/robustirc/robustirc.github.io/issues/new[file an issue on
+GitHub] so that we can answer your question and improve the document.
+
+You can find the reference implementation of this protocol at
+https://github.com/robustirc/bridge/blob/master/robustsession/robustsession.go
+
+== Introduction ==
+
+This document outlines how RobustIRC clients and RobustIRC servers
+communicate. In IRC, communication happens over a single long-lived TCP
+connection. RobustIRC uses HTTP requests instead, so there are requests to
+create a session (≘ connect), delete the session (≘ disconnect), send a message
+(≘ send) and receive a number of messages (≘ receive).
+
+The RobustIRC client can send these requests to any server in the network. In
+case the chosen server is not the raft leader, that server will proxy the
+request to the current leader (read-only requests such as <<getmessages>> can
+be handled by raft followers as well). When a request was redirected, the
+`Content-Location` response header contains the current raft leader. Clients
+SHOULD direct further requests directly to the server specified in
+`Content-Location` in order to decrease load on the network and minimize
+latency. In case the chosen server cannot be reached or responds with an error,
+the client can chose another server, for example at random, to retry the
+request.
+
+The behavior described in the previous paragraphs make this protocol resilient
+against network partitions and single-server unavailability.
+
+== Resolving hosts ==
+
+RobustIRC mandates the use of an http://en.wikipedia.org/wiki/SRV_record[SRV
+DNS record] to discover servers. The client gets a network address, e.g.
+`robustirc.net` and resolves the `_robustirc._tcp` SRV record, e.g.
+`_robustirc._tcp.robustirc.net`. The target:port tuples to which that SRV
+record resolves are used as initial list of servers. robustPing messages in the
+<<getmessages>> response contain a list of servers so that clients don’t need to
+re-resolve but still get an up-to-date list of servers.
+
+The advantage of using SRV records is that the network address is short and
+memorable, but RobustIRC servers can be hosted on different servers than the
+network address itself. E.g., robustirc.net’s A record points to github, but
+the `_robustirc._tcp.robustirc.net` record points to 3 different servers.
+
+Clients MAY ignore the priority and weight fields of the SRV record, but SHOULD
+randomly shuffle the list of servers (as opposed to always connecting to the
+first one).
+
+== Error handling ==
+
+Each of the described <<methods>> returns the HTTP `200 OK` status code when
+successful or an HTTP error (e.g. `500 Internal Server Error`) when things went
+wrong.
+
+Each method (except for <<createsession>>) can return an HTTP `404 Not Found`
+status code when the specified session was not found, or a HTTP `400 Bad
+Request` if something with the request itself was wrong. All 4xx replies are
+permanent and clients SHOULD close the connection — no subsequent message with
+that same session id will be accepted.
+
+In case the server replies with an error, the response body will contain a
+human-readable error message that the client should expose.
+
+== Exponential backoff ==
+
+To avoid overloading the network, clients MUST use exponential backoff, with an
+upper cap on retries of at least 60 seconds (e.g. stem:[2^6 = 64]).
+
+This means: the time between two unsuccessful requests to any specific server
+(e.g. <<getmessages>>) must be at least stem:[2^0 = 1] second. For the next
+request, this time will be increased to stem:[2^1 = 2] seconds, then stem:[2^2
+= 4] seconds, etc.
+
+Furthermore, clients MUST delay connecting to a different server for a random
+duration between 250ms to at least 500ms to avoid
+http://en.wikipedia.org/wiki/Thundering_herd_problem[the thundering herd
+problem].
+
+[[methods]]
+== Methods ==
+
+Implementations MUST set their User-Agent string to a clear identifier, such as
+`WeeChat RobustIRC plugin v1.0`.
+
+[[createsession]]
+=== CreateSession ===
+
+IRC equivalent::
+	Creating a TCP connection to an IRC server (connect).
+HTTP request::
+	`POST /robustirc/v1/session`
+Request body (JSON-encoded)::
+	Empty.
+Response body (JSON-encoded)::
++
+```
+{"Sessionid":   "$sessionid",
+ "Sessionauth": "$sessionauth",
+ "Prefix":      "$prefix"}
+```
+
+`$prefix` is the IRC server prefix, e.g. `robustirc.net`. The prefix is
+provided so that clients which act as a proxy (e.g. the
+https://github.com/robustirc/bridge[RobustIRC bridge]) can do their own
+PING/PONG exchange and pretend to be the IRC server in order to not confuse
+clients.
+
+`$sessionauth` needs to be sent in all further requests as the `X-Session-Auth`
+header. Without this header, the server will refuse to handle your request to
+prevent session stealing. We decided against making this a cookie because of
+the domain scope restriction of cookies (i.e. all servers in a RobustIRC
+network would need to be under a common domain).
+
+[[deletesession]]
+=== DeleteSession ===
+
+IRC equivalent::
+	Closing the TCP connection (disconnect).
+HTTP request::
+	`DELETE /robustirc/v1/$sessionid`
+Request body (JSON-encoded)::
++
+```
+{"Quitmessage": "$quitmsg"}
+```
+Response body (JSON-encoded)::
+	Empty.
+
+`$quitmsg` will be synthesized into a QUIT IRC message on the RobustIRC server.
+
+[[postmessage]]
+=== PostMessage ===
+
+IRC equivalent::
+	Sending a line.
+HTTP request::
+	`POST /robustirc/v1/$sessionid/message`
+Request body (JSON-encoded)::
++
+```
+{"Data": "$ircmessage",
+ "ClientMessageId": $clientid}
+```
+Response body (JSON-encoded)::
+	Empty.
+
+`$ircmessage` must be an IRC protocol message as per
+https://tools.ietf.org/html/rfc2812[RFC2812], e.g. `TOPIC #robustirc :hey`.
+
+`$ircmessage` must not contain the new line character (neither `\n` nor `\r`).
+
+`$ircmessage` must be encoded in valid UTF-8. Messages which are not valid
+UTF-8 will be refused and an error will be returned.
+
+`$clientid` is an uint64 identifier created by the client. It SHOULD be chosen
+randomly, being different across multiple instances of the client, e.g. by
+using a random value + the hash of the message. Clients MUST not send multiple
+requests in parallel, but wait for the reply after each request. If the reply
+is an error (either a network failure or an HTTP 5xx error code), the client
+SHOULD resend the request to a different server, with unchanged `$clientid`.
+`$clientid` MUST be different between two subsequent messages.
+
+When the server receives a message with the same `$clientid` as the last
+committed message (e.g. when the client retried because the connection broke
+before the server’s response was transmitted), it will acknowledge the message
+again without committing it again. This mechanism is used to prevent duplicate
+messages when retrying.
+
+Sessions are terminated by the server after a certain time period of inactivity
+(30 minutes by default). In order to prevent that, the client should send a
+`PING` ircmessage after every minute of inactivity, where inactivity means
+there was no PostMessage request.
+
+[[getmessages]]
+=== GetMessages ===
+
+IRC equivalent::
+	Reading a line.
+HTTP request::
++
+```
+GET /robustirc/v1/$sessionid/messages?lastseen=$msgid
+```
++
+.Example:
+```
+GET /robustirc/v1/$sessionid/messages?lastseen=1426109846660183024.1
+```
+Request body (JSON-encoded)::
+	Empty.
+Response body (JSON-encoded)::
+	The request body is a chunked HTTP response where each chunk is a JSON
+	message. The following JSON messages are defined:
++
+.robustIRCToClient (=3) message spec:
+```
+{"Type": 3,
+ "Id": $msgid,
+ "Data": "$ircmessage"}
+```
++
+.robustIRCToClient example:
+```
+{"Id":{"Id":1426109846660183024,"Reply":1},
+ "Type":3,
+ "Data":":robustirc.net 001 michael :Welcome to RobustIRC!"}
+```
++
+.robustPing (=4) message:
+```
+{"Type": 4,
+ "Servers": ["$server0", "$serverN"]}
+```
+
+This request must be done via at least HTTP 1.1, because the response will use
+HTTP chunked transfer encoding. Each chunk is one JSON array describing a
+message. There is no timeout on this request, so the connection may live for a
+long time.
+
+Messages are guaranteed to be in chronological order.
+
+`$msgid` is a (structured) unique id for the message, about whose contents the
+client should not make any assumptions. Clients can specify `$msgid` in the
+lastseen parameter, telling the server to only send messages _newer than_ the
+specified `$msgid`. When specifying `$msgid`, the format `$id.$reply` must be
+used, where `$id` and `$reply` represent the contents of the `$msgid`’s Id and
+Reply field, respectively.

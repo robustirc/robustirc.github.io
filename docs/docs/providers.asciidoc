@@ -1,0 +1,6 @@
+digitalocean: slower than comparable offerings from other providers. sometimes became unreachable (had to login and reboot), so i switched instead of debugging
+linode: works well
+vultr: works well
+aws: TODO
+
+benchmarks: https://joshtronic.com/2017/02/14/five-dollar-showdown-linode-vs-digitalocean-vs-lightsaild-vs-vultr/
