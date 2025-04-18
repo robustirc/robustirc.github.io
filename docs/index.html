@@ -71,9 +71,9 @@ body {
 	  </div>
 	</form>
         <p>To install and start a bridge for <code class="network">robustirc.net</code>, run:</p>
-	<pre style="text-align: left">export GOPATH=~/gocode
-go get -u github.com/robustirc/bridge/robustirc-bridge
-$GOPATH/bin/robustirc-bridge -network=<span class="network">robustirc.net</span></pre>
+	<pre style="text-align: left">
+go install github.com/robustirc/bridge/robustirc-bridge@latest
+~/go/bin/robustirc-bridge -network=<span class="network">robustirc.net</span></pre>
         <p>Then, run the following commands in <span class="client">irssi</span> to connect:</p>
 <div id="clientinstructions">
 	<pre style="text-align: left" class="instructions-irssi">/network add <span class="networkname">robustirc</span>
