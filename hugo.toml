@@ -1,0 +1,10 @@
+baseURL = "https://robustirc.net/"
+languageCode = "en-us"
+title = "RobustIRC - IRC without netsplits"
+theme = "robustirc"
+disableKinds = ["RSS", "taxonomyTerm"]
+publishDir = "docs"
+
+[outputs]
+home = [ "HTML" ]
+page = [ "HTML" ]

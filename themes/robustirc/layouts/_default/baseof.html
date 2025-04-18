@@ -4,11 +4,11 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{{ page.title }}</title>
+<title>{{ .Params.Title }}</title>
 <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
 <link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.1/css/fontawesome.css">
 <link rel="stylesheet" href="//use.fontawesome.com/releases/v5.0.1/css/brands.css">
-<link href="jumbotron-narrow.css" rel="stylesheet">
+<link href="/jumbotron-narrow.css" rel="stylesheet">
 <link rel="stylesheet" href="//fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400">
 <style type="text/css">
 body {
@@ -37,16 +37,23 @@ body {
       <div class="header">
         <nav>
           <ul class="nav nav-pills pull-right">
-            {% assign pages = site.pages | sort:"weight" %}
-            {% for p in pages %}
-              <li role="presentation" {% if p.url == page.url %}class="active"{% endif %}><a href="{{ p.url }}">{{ p.menu }}</a></li>
-            {% endfor %}
+
+            <!-- TODO: add class="active" -->
+              <li role="presentation" ><a href="/assets/css/style.css"></a></li>
+            
+              <li role="presentation" ><a href="/">Home</a></li>
+            
+              <li role="presentation"><a href="/docs/">Docs</a></li>
+            
+              <li role="presentation" ><a href="/releases/">Releases</a></li>
+            
+              <li role="presentation" ><a href="/contact/">Contact</a></li>
           </ul>
         </nav>
         <h3 class="text-muted">RobustIRC</h3>
       </div>
 
-      {{ content }}
+      {{- block "main" . }}{{- end }}
 
       <footer class="footer" style="text-align: center">
         <p>&copy; 2014 <a href="https://github.com/robustirc/bridge/blob/master/AUTHORS">The RobustIRC Authors</a></p>
@@ -134,3 +141,4 @@ $(document).ready(function() {
 <!--
 vim:ts=2:sw=2:et
 -->
+
